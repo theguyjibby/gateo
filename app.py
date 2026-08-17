@@ -35,7 +35,7 @@ load_dotenv()
 
 
 app = Flask(__name__, template_folder='templates')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickets.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('secret_key')
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=30)
@@ -2433,9 +2433,10 @@ def resolve_bank_account(event_id):
 
 
 
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5000)
 
 
