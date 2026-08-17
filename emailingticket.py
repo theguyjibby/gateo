@@ -1,10 +1,13 @@
 import base64
+import logging
 
 from flask_mail import Message
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from extensions import mail
+
+logger = logging.getLogger(__name__)
 
 
 def send_email(to_email, qr_base64, event_name, ticket_name, ticket_type):
@@ -80,7 +83,7 @@ def send_ticket_email_flask(to_email, qr_base64=None, event_name=None, ticket_na
         return True
 
     except Exception as e:
-        print("Organizer Notification Email Error:", e)
+        logger.error("Buyer ticket email failed: %s", e)
         return False
 
 
@@ -135,9 +138,8 @@ def send_date_location_change_notification(to_email, event_name, old_date, new_d
         return True
 
     except Exception as e:
-        print("Date/Location Change Notification Error:", e)
+        logger.error("Date/location change notification email failed: %s", e)
         return False
-
 
 def send_event_cancelled_notification(to_email, event_name):
     try:
@@ -167,7 +169,7 @@ def send_event_cancelled_notification(to_email, event_name):
         return True
 
     except Exception as e:
-        print("Event Cancelled Notification Error:", e)
+        logger.error("Event cancelled notification email failed: %s", e)
         return False
 
 
@@ -197,7 +199,7 @@ def send_refund_request_notification(to_email, event_name, ticket_name, user_ema
         return True
 
     except Exception as e:
-        print("Refund Request Notification Error:", e)
+        logger.error("Refund request notification email failed: %s", e)
         return False
 
 
@@ -230,11 +232,8 @@ def send_purchase_notification_organiser_issued_ticket(
         return True
 
     except Exception as e:
-        print("Organizer Notification Email Error:", e)
+        logger.error("Organiser-issued ticket notification email failed: %s", e)
         return False
-
-
-
 
 def send_purchase_notification_to_organiser(
     organiser_email,
@@ -259,7 +258,7 @@ def send_purchase_notification_to_organiser(
                 <p><strong>Ticket Type:</strong> {ticket_type}</p>
                 <p><strong>Quantity:</strong> {ticket_quantity}</p>
                 {f'<p><strong>Price:</strong> ${ticket_price:.2f}</p>' if ticket_price is not None else ''}
-                <p><strong>Total Price:</strong> ${ticket_price * ticket_quantity:.2f if ticket_price is not None else 'N/A'}</p>
+                <p><strong>Total Price:</strong> {f"${ticket_price * ticket_quantity:.2f}" if ticket_price is not None else "Free"}</p>
             </div>
         </div>
         """
@@ -268,5 +267,5 @@ def send_purchase_notification_to_organiser(
         return True
 
     except Exception as e:
-        print("Organizer Notification Email Error:", e)
+        logger.error("Purchase notification email to organiser failed: %s", e)
         return False

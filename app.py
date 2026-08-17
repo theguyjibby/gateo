@@ -1025,7 +1025,7 @@ def create_ticket(event_id):
     tickets = TicketsOrganizers.query.filter_by(event_id=event_id).all()
     # Pre-calculate sold counts
     for t in tickets:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
 
     return render_template('create_ticket.html', event=event, tickets=tickets)
@@ -1126,7 +1126,7 @@ def get_paid_tickets(event_id):
     from datetime import datetime
     now = datetime.now()
     for t in event.TicketsOrganizers:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
         t.is_expired = bool(event.event_end_date) and now >= event.event_end_date
 
@@ -1173,7 +1173,7 @@ def create_organizer_issued_ticket(event_id):
         return jsonify({'message': 'Ticket sales have ended'}), 400
     
     if ticket_type_obj.ticket_quantity is not None:
-        tickets_sold = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_obj.ticket_type_id).count()
+        tickets_sold = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_obj.ticket_type_id, is_purchased=True).count()
         if tickets_sold + ticket_quantity > ticket_type_obj.ticket_quantity:
             return jsonify({'message': 'Ticket type is sold out'}), 400
 
@@ -1313,7 +1313,7 @@ def view_public_event(slug):
     from datetime import datetime
     now = datetime.now()
     for t in ticket_details:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=particular_event.event_id, ticket_type_id=t.ticket_type_id).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=particular_event.event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
         t.is_expired = bool(particular_event.event_end_date) and now >= particular_event.event_end_date
         t.available_quantity = max(0, min((t.ticket_quantity - t.sold_count) if t.ticket_quantity is not None else 5, 5))
@@ -1625,7 +1625,19 @@ def initialize_ticket_purchase(event_id):
     
     ticket_type_id = ticket_type.ticket_type_id
 
-    sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_id).count()
+    cutoff = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
+    stale = TicketsUsers.query.filter(
+        TicketsUsers.event_id == event_id,
+        TicketsUsers.ticket_type_id == ticket_type_id,
+        TicketsUsers.is_purchased == False,
+        TicketsUsers.purchase_date < cutoff
+    ).all()
+    if stale:
+        for t in stale:
+            db.session.delete(t)
+        db.session.commit()
+
+    sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_id, is_purchased=True).count()
     total_tickets = ticket_type.ticket_quantity if ticket_type.ticket_quantity is not None else float('inf')
     remaining_tickets = total_tickets - sold_tickets
     
@@ -1674,24 +1686,25 @@ def initialize_ticket_purchase(event_id):
 
         db.session.commit()
 
-        send_ticket_email_flask(
-            to_email=user_email,
-            tickets=created_tickets,
-            event_name=event.event_name
-        )
+        try:
+            send_ticket_email_flask(
+                to_email=user_email,
+                tickets=created_tickets,
+                event_name=event.event_name
+            )
+        except Exception:
+            pass
 
-
-
-
-
-        send_purchase_notification_to_organiser(
-            organiser_email=organizer_email,
-            event_name = event.event_name,
-            ticket_type=ticket_type.ticket_type,
-            ticket_name=user_name,
-            ticket_quantity=purchase_quantity
-            
-        )
+        try:
+            send_purchase_notification_to_organiser(
+                organiser_email=organizer_email,
+                event_name=event.event_name,
+                ticket_type=ticket_type.ticket_type,
+                ticket_name=user_name,
+                ticket_quantity=purchase_quantity
+            )
+        except Exception:
+            pass
 
 
 

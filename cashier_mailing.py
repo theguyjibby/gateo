@@ -1,8 +1,11 @@
+import logging
 from flask_mail import Message
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 from extensions import mail
+
+logger = logging.getLogger(__name__)
 
 
 def send_withdrawal_link(
