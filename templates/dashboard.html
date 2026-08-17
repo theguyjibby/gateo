@@ -203,6 +203,24 @@
   </header>
   <!-- Main Content Canvas -->
   <main class="lg:ml-64 pt-16 min-h-screen p-4 sm:p-6 lg:p-12">
+    <!-- Events Grid -->
+    <div id="eventsContainer" class="hidden w-full max-w-6xl mx-auto">
+      <div class="flex justify-between items-end mb-10">
+        <div>
+          <h2 class="text-4xl font-extrabold font-headline tracking-tighter text-on-surface">Your Events</h2>
+          <p class="text-on-surface-variant mt-2">Manage and monitor your upcoming and past events.</p>
+        </div>
+        <a href="/create_event"
+          class="px-6 py-3 bg-primary text-white rounded-DEFAULT font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+          <span class="material-symbols-outlined">add</span>
+          Add New Event
+        </a>
+      </div>
+      <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+
     <!-- Empty State -->
     <div id="emptyState" class="hidden w-full max-w-3xl mx-auto flex flex-col items-center text-center mt-20">
       <!-- Bento Illustration Grid -->
@@ -263,25 +281,6 @@
           <p class="text-xs text-on-surface-variant font-body">Already have events elsewhere? You can import your CSV
             data directly from the settings menu.</p>
         </div>
-      </div>
-    </div>
-    </div>
-
-    <!-- Events Grid -->
-    <div id="eventsContainer" class="hidden w-full max-w-6xl mx-auto">
-      <div class="flex justify-between items-end mb-10">
-        <div>
-          <h2 class="text-4xl font-extrabold font-headline tracking-tighter text-on-surface">Your Events</h2>
-          <p class="text-on-surface-variant mt-2">Manage and monitor your upcoming and past events.</p>
-        </div>
-        <a href="/create_event"
-          class="px-6 py-3 bg-primary text-white rounded-DEFAULT font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
-          <span class="material-symbols-outlined">add</span>
-          Add New Event
-        </a>
-      </div>
-      <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Cards injected by JS -->
       </div>
     </div>
   </main>
