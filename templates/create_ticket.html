@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Ticket - Gateo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7c3aed',
+                        'primary-container': '#4c1d95',
+                        secondary: '#8b5cf6',
+                        surface: '#ffffff',
+                        'surface-container': '#f8fafc',
+                        'on-surface': '#0f172a',
+                        'on-surface-variant': '#475569',
+                        outline: '#94a3b8',
+                        'outline-variant': '#cbd5e1'
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-container min-h-screen text-on-surface font-body p-6">
+    <div class="max-w-2xl mx-auto mt-12">
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-extrabold font-headline mb-2">Ticket Settings</h1>
+                <p class="text-on-surface-variant">Step 2: Configure your ticket types and pricing.</p>
+            </div>
+            <a href="/event/{{ event.event_slug }}/manage" class="px-6 py-2 border border-outline-variant rounded-full text-sm font-bold font-headline hover:bg-slate-200 transition-colors">
+                Back to Hub
+            </a>
+        </div>
+
+        <div class="bg-surface rounded-2xl shadow-xl shadow-slate-200/50 border border-outline-variant/30 p-8">
+            <div id="formMessage" class="hidden mb-6 p-4 rounded-xl text-sm font-medium border"></div>
+
+            <form id="createTicketForm" class="space-y-6" onsubmit="handleCreateTicket(event)">
+                <div id="ticketsContainer" class="space-y-6">
+                    <!-- Existing Tickets -->
+                    {% if tickets %}
+                        {% for ticket in tickets %}
+                        <div class="ticket-card relative bg-surface-container/30 border border-outline-variant/30 rounded-xl p-6 space-y-4" data-id="{{ ticket.ticket_type_id }}">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="font-bold font-headline text-primary text-sm ticket-title">Ticket #{{ loop.index }}</h3>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {% if ticket.is_sold_out %}bg-red-100 text-red-600{% else %}bg-green-100 text-green-600{% endif %}">
+                                        {{ ticket.sold_count }} Sold {% if ticket.ticket_quantity %}/ {{ ticket.ticket_quantity }}{% endif %}
+                                    </span>
+                                    {% if ticket.is_sold_out %}
+                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-red-600 text-white rounded-full uppercase tracking-tighter">Sold Out</span>
+                                    {% endif %}
+                                </div>
+                                <button type="button" onclick="deleteExistingTicket(this, {{ ticket.ticket_type_id }})" class="remove-btn text-error hover:text-red-700 p-1 transition-colors group">
+                                    <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">delete</span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/10">
+                                <span class="text-xs font-bold font-headline text-primary">Sales Status</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="is_active" class="sr-only peer" {% if ticket.is_active %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    <span class="ml-3 text-xs font-bold font-headline text-on-surface-variant status-text">{% if ticket.is_active %}Active{% else %}Paused{% endif %}</span>
+                                </label>
+                            </div>
+                            <input type="hidden" name="ticket_type_id" value="{{ ticket.ticket_type_id }}">
+                            <div>
+                                <label class="block text-sm font-bold font-headline text-on-surface mb-2">Ticket Name / Type *</label>
+                                <input type="text" name="ticket_type" value="{{ ticket.ticket_type }}" required class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Price (Standard Currency) *</label>
+                                    <input type="number" name="ticket_price" value="{{ ticket.ticket_price }}" step="0.01" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none" placeholder="0.00 for free">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Total Quantity</label>
+                                    <input type="number" name="ticket_quantity" value="{{ ticket.ticket_quantity or '' }}" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none" placeholder="Unlimited">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Sales Start Date</label>
+                                    <input type="date" name="ticket_selling_start_date" value="{{ ticket.ticket_selling_start_date.strftime('%Y-%m-%d') if ticket.ticket_selling_start_date else '' }}" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none text-on-surface-variant">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Sales End Date</label>
+                                    <input type="date" name="ticket_selling_end_date" value="{{ ticket.ticket_selling_end_date.strftime('%Y-%m-%d') if ticket.ticket_selling_end_date else '' }}" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none text-on-surface-variant">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold font-headline text-on-surface mb-2">Description / Benefits</label>
+                                <textarea name="ticket_description" rows="2" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm resize-none transition-all outline-none">{{ ticket.ticket_description or '' }}</textarea>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-between items-center pt-2">
+                    <button type="button" onclick="addTicketForm()" id="addTicketBtn" class="px-4 py-2 bg-surface-container border border-outline-variant/50 text-primary font-bold text-sm rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">add</span> Add Another Ticket
+                    </button>
+                    <span id="ticketCounterText" class="text-xs text-on-surface-variant font-bold">0 / 10 Tickets</span>
+                </div>
+
+                <div class="pt-6 border-t border-outline-variant/30 mt-6">
+                    <button type="submit" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-sm shadow-xl shadow-primary/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        Save and Finish
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                    </button>
+                    <p class="text-center text-[10px] text-on-surface-variant mt-4">You can edit or add more ticket types later from the event management dashboard.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Template Structure -->
+    <template id="ticketTemplate">
+        <div class="ticket-card relative bg-surface-container/30 border border-outline-variant/30 rounded-xl p-6 space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold font-headline text-primary text-sm ticket-title">Ticket </h3>
+                <button type="button" onclick="removeTicketForm(this)" class="remove-btn hidden text-error hover:text-red-700 p-1 transition-colors group">
+                    <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">delete</span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/10">
+                <span class="text-xs font-bold font-headline text-primary">Sales Status</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_active" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <span class="ml-3 text-xs font-bold font-headline text-on-surface-variant status-text">Active</span>
+                </label>
+            </div>
+            <div>
+                <label class="block text-sm font-bold font-headline text-on-surface mb-2">Ticket Name / Type *</label>
+                <input type="text" name="ticket_type" required class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none" placeholder="e.g. Early Bird, VIP, General Admission">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Price (Standard Currency) *</label>
+                    <input type="number" name="ticket_price" step="0.01" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none" placeholder="0.00 for free">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Total Quantity</label>
+                    <input type="number" name="ticket_quantity" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none" placeholder="Unlimited">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Sales Start Date</label>
+                    <input type="date" name="ticket_selling_start_date" value="{% if event and event.event_creation_date %}{{ event.event_creation_date.strftime('%Y-%m-%d') }}{% endif %}" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none text-on-surface-variant">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold font-headline text-on-surface mb-2">Sales End Date</label>
+                    <input type="date" name="ticket_selling_end_date" value="{% if event and event.event_end_date %}{{ event.event_end_date.strftime('%Y-%m-%d') }}{% endif %}" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm transition-all outline-none text-on-surface-variant">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold font-headline text-on-surface mb-2">Description / Benefits</label>
+                <textarea name="ticket_description" rows="2" class="w-full bg-surface border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary rounded-xl px-4 py-3 text-sm resize-none transition-all outline-none" placeholder="What's included in this ticket..."></textarea>
+            </div>
+        </div>
+    </template>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" onclick="closeCustomModal()"></div>
+        <div class="bg-surface w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 transform scale-95 opacity-0 transition-all duration-300 overflow-hidden">
+            <div id="modalHeader" class="p-8 pb-4 flex flex-col items-center text-center">
+                <div id="modalIconContainer" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                    <span id="modalIcon" class="material-symbols-outlined text-3xl">warning</span>
+                </div>
+                <h3 id="modalTitle" class="text-2xl font-extrabold font-headline text-on-surface mb-2">Are you sure?</h3>
+                <p id="modalDescription" class="text-on-surface-variant text-sm leading-relaxed"></p>
+            </div>
+            <div class="p-8 pt-4 flex flex-col gap-3">
+                <button id="modalConfirmBtn" class="w-full py-4 rounded-2xl font-bold font-headline text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg"></button>
+                <button onclick="closeCustomModal()" class="w-full py-4 text-on-surface-variant font-bold font-headline text-sm hover:bg-surface-variant/50 rounded-2xl transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const customModal = document.getElementById('customModal');
+        const modalContent = customModal.querySelector('.bg-surface');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+        function showCustomModal({ title, description, icon, type, confirmText, onConfirm }) {
+            modalTitle.innerText = title;
+            modalDescription.innerText = description;
+            modalIcon.innerText = icon || 'warning';
+            modalConfirmBtn.innerText = confirmText || 'Confirm';
+            
+            // Themes
+            modalIconContainer.classList.remove('bg-red-100', 'text-red-600', 'bg-amber-100', 'text-amber-600', 'bg-primary/10', 'text-primary');
+            modalConfirmBtn.classList.remove('bg-red-600', 'bg-amber-500', 'bg-primary', 'shadow-red-500/20', 'shadow-amber-500/20', 'shadow-primary/20');
+            
+            if (type === 'danger') {
+                modalIconContainer.classList.add('bg-red-100', 'text-red-600');
+                modalConfirmBtn.classList.add('bg-red-600', 'text-white', 'shadow-red-500/20');
+            } else if (type === 'warning') {
+                modalIconContainer.classList.add('bg-amber-100', 'text-amber-600');
+                modalConfirmBtn.classList.add('bg-amber-500', 'text-white', 'shadow-amber-500/20');
+            } else {
+                modalIconContainer.classList.add('bg-primary/10', 'text-primary');
+                modalConfirmBtn.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+            }
+
+            modalConfirmBtn.onclick = () => {
+                onConfirm();
+                closeCustomModal();
+            };
+
+            customModal.classList.remove('hidden');
+            setTimeout(() => {
+                customModal.querySelector('.bg-slate-900\/60').classList.add('opacity-100');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeCustomModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            customModal.querySelector('.bg-slate-900\/60').classList.remove('opacity-100');
+            setTimeout(() => {
+                customModal.classList.add('hidden');
+            }, 300);
+        }
+
+        const formMessage = document.getElementById('formMessage');
+        const ticketsContainer = document.getElementById('ticketsContainer');
+        const ticketTemplate = document.getElementById('ticketTemplate');
+        const addTicketBtn = document.getElementById('addTicketBtn');
+        const ticketCounterText = document.getElementById('ticketCounterText');
+        
+        const MAX_TICKETS = 10;
+        let ticketCount = 0;
+
+        function updateUIState() {
+            const cards = ticketsContainer.querySelectorAll('.ticket-card');
+            ticketCount = cards.length;
+            
+            // Update counter
+            ticketCounterText.innerText = `${ticketCount} / ${MAX_TICKETS} Tickets`;
+
+            // Enforce max logic
+            addTicketBtn.style.display = ticketCount >= MAX_TICKETS ? 'none' : 'flex';
+
+            // Title updates and delete button logics
+            cards.forEach((card, index) => {
+                const title = card.querySelector('.ticket-title');
+                const removeBtn = card.querySelector('.remove-btn');
+                
+                title.innerText = `Ticket #${index + 1}`;
+                
+                // Allow removing only if there's more than 1 ticket overall
+                if (ticketCount > 1) {
+                    removeBtn.classList.remove('hidden');
+                } else {
+                    removeBtn.classList.add('hidden');
+                }
+
+                // Status text logic
+                const toggle = card.querySelector('input[name="is_active"]');
+                const statusText = card.querySelector('.status-text');
+                toggle.onchange = (e) => {
+                    statusText.innerText = e.target.checked ? 'Active' : 'Paused';
+                };
+            });
+        }
+
+        function addTicketForm() {
+            if (ticketCount >= MAX_TICKETS) return;
+            const clone = ticketTemplate.content.cloneNode(true);
+            ticketsContainer.appendChild(clone);
+            updateUIState();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const existingCards = ticketsContainer.querySelectorAll('.ticket-card');
+            if (existingCards.length === 0) {
+                addTicketForm();
+            } else {
+                updateUIState();
+            }
+        });
+
+        function deleteExistingTicket(btnElement, ticketTypeId) {
+            showCustomModal({
+                title: 'Delete Ticket Tier?',
+                description: 'This will permanently remove this ticket tier and all associated configuration. This action cannot be undone.',
+                icon: 'delete_forever',
+                type: 'danger',
+                confirmText: 'Yes, Delete Tier',
+                onConfirm: async () => {
+                    try {
+                        const response = await fetch(`/tickets/organizer/delete/${ticketTypeId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            const card = btnElement.closest('.ticket-card');
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                card.remove();
+                                updateUIState();
+                            }, 300);
+                        } else {
+                            const resData = await response.json();
+                            showCustomModal({ title: 'Error', description: resData.message || 'Error deleting ticket', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                        }
+                    } catch (err) {
+                        showCustomModal({ title: 'Connection Error', description: 'Failed to connect to the server.', type: 'danger', confirmText: 'OK', onConfirm: () => {} });
+                    }
+                }
+            });
+        }
+
+        function showMessage(msg, isError) {
+            formMessage.innerText = msg;
+            formMessage.classList.remove('hidden');
+            formMessage.className = isError 
+                ? 'mb-6 p-4 rounded-xl text-sm font-medium border bg-red-50 text-red-800 border-red-100'
+                : 'mb-6 p-4 rounded-xl text-sm font-medium border bg-green-50 text-green-800 border-green-100';
+            
+            formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function handleCreateTicket(event) {
+            event.preventDefault();
+            
+            // Gather all cards
+            const cards = ticketsContainer.querySelectorAll('.ticket-card');
+            const payloadArray = [];
+            
+            cards.forEach(card => {
+                const idInput = card.querySelector('input[name="ticket_type_id"]');
+                const type = card.querySelector('input[name="ticket_type"]').value;
+                const price = card.querySelector('input[name="ticket_price"]').value;
+                const quantity = card.querySelector('input[name="ticket_quantity"]').value;
+                const start = card.querySelector('input[name="ticket_selling_start_date"]').value;
+                const end = card.querySelector('input[name="ticket_selling_end_date"]').value;
+                const description = card.querySelector('textarea[name="ticket_description"]').value;
+                const isActive = card.querySelector('input[name="is_active"]').checked;
+                
+                payloadArray.push({
+                    ticket_type_id: idInput ? idInput.value : null,
+                    ticket_type: type,
+                    ticket_price: price,
+                    ticket_quantity: quantity,
+                    ticket_selling_start_date: start,
+                    ticket_selling_end_date: end,
+                    ticket_description: description,
+                    is_active: isActive
+                });
+            });
+
+            if (payloadArray.length === 0) return;
+
+            // Get event_id from URL
+            const urlParts = window.location.pathname.split('/').filter(Boolean);
+            const eventId = urlParts[urlParts.length - 1]; // Robust check
+
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Saving...';
+
+            try {
+                const response = await fetch(`/tickets/organizer/${eventId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadArray)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage('Tickets successfully updated! Redirecting to hub...', false);
+                    setTimeout(() => window.location.href = `/event/{{ event.event_slug }}/manage`, 1500);
+                } else {
+                    showMessage(result.message || 'Error configuring bulk tickets.', true);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `Save and Finish <span class="material-symbols-outlined text-lg">check_circle</span>`;
+                }
+            } catch (err) {
+                showMessage(`Connection error: ${err.message}`, true);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `Save and Finish <span class="material-symbols-outlined text-lg">check_circle</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

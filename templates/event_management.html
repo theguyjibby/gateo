@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.event_name }} - Management Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7c3aed',
+                        'primary-container': '#4c1d95',
+                        'on-primary': '#ffffff',
+                        secondary: '#8b5cf6',
+                        surface: '#ffffff',
+                        'surface-variant': '#f3f4f6',
+                        'surface-container': '#f8fafc',
+                        'surface-container-highest': '#cbd5e1',
+                        'on-surface': '#0f172a',
+                        'on-surface-variant': '#475569',
+                        outline: '#94a3b8',
+                        'outline-variant': '#cbd5e1',
+                        error: '#ef4444',
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .stats-card:hover .icon-bg {
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
+</head>
+
+<body class="bg-surface-container-highest/20 min-h-screen text-on-surface font-body p-6 md:p-12">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <nav class="flex items-center gap-2 text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">
+                <a href="/dashboard" class="hover:text-primary transition-colors">Dashboard</a>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-on-surface-variant">Event Management</span>
+            </nav>
+            <a href="/dashboard" class="w-10 h-10 rounded-full bg-surface border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/50 hover:shadow-lg transition-all" title="Back to Dashboard">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+            <div class="space-y-2">
+                <h1 class="text-4xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface">{{ event.event_name }}</h1>
+                <div class="flex flex-wrap items-center gap-4 text-on-surface-variant">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-surface rounded-full border border-outline-variant/30 text-sm font-medium">
+                        <span class="material-symbols-outlined text-sm text-primary">calendar_month</span>
+                        {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'No Date' }}
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-surface rounded-full border border-outline-variant/30 text-sm font-medium">
+                        <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+                        {{ event.event_location }}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                {% if event.is_suspended %}
+                <button onclick="suspendEvent()" class="px-6 py-3 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl font-bold font-headline text-sm hover:bg-blue-100 transition-all flex items-center gap-2 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">play_circle</span> Resume Event
+                </button>
+                {% else %}
+                <button onclick="suspendEvent()" class="px-6 py-3 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl font-bold font-headline text-sm hover:bg-amber-100 transition-all flex items-center gap-2 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">pause_circle</span> Suspend
+                </button>
+                {% endif %}
+                <a href="/e/{{ event.event_slug }}?from=event_management" target="_blank" 
+                   class="px-6 py-3 bg-white border border-outline-variant text-on-surface rounded-xl font-bold font-headline text-sm hover:bg-surface-container transition-all flex items-center gap-2 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    View Public Page
+                </a>
+            </div>
+        </div>
+
+        <!-- Action Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+            <!-- Edit Event Card -->
+            {% if event.is_suspended %}
+            <div class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 opacity-50 cursor-not-allowed">
+                <div class="icon-bg w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl">edit_note</span>
+                </div>
+                <h3 class="text-lg font-bold font-headline mb-2">Edit Details</h3>
+                <p class="text-on-surface-variant text-xs leading-relaxed font-bold text-amber-500">Temporarily suspended.</p>
+            </div>
+            {% else %}
+            <a href="/create_event/edit/{{ event.event_id }}" 
+               class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 hover:border-primary/30 transition-all">
+                <div class="icon-bg w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl">edit_note</span>
+                </div>
+                <h3 class="text-lg font-bold font-headline mb-2">Edit Details</h3>
+                <p class="text-on-surface-variant text-xs leading-relaxed">Update your event mission, location, media, and basic info.</p>
+            </a>
+            {% endif %}
+
+            <!-- Manage Tickets Card -->
+            {% if event.is_suspended %}
+            <div class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 opacity-50 cursor-not-allowed">
+                <div class="icon-bg w-14 h-14 bg-secondary/10 text-secondary rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl">confirmation_number</span>
+                </div>
+                <h3 class="text-lg font-bold font-headline mb-2">Manage Tickets</h3>
+                <p class="text-on-surface-variant text-xs leading-relaxed font-bold text-amber-500">Temporarily suspended.</p>
+            </div>
+            {% else %}
+            <a href="/tickets/organizer/{{ event.event_id }}" 
+               class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 hover:border-primary/30 transition-all">
+                <div class="icon-bg w-14 h-14 bg-secondary/10 text-secondary rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl">confirmation_number</span>
+                </div>
+                <h3 class="text-lg font-bold font-headline mb-2">Manage Tickets</h3>
+                <p class="text-on-surface-variant text-xs leading-relaxed">Configure multiple pricing tiers, quantities, and sales dates.</p>
+            </a>
+            {% endif %}
+
+            <!-- Team Card -->
+            <a href="/organizer/{{ event.event_id }}/team?from=event_management"
+               class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 hover:border-primary/30 transition-all">
+                <div class="icon-bg w-14 h-14 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl">groups</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold font-headline">Team Access</h3>
+                    <span class="material-symbols-outlined text-violet-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </div>
+                <p class="text-on-surface-variant text-xs leading-relaxed">Invite admins and scanner team members for this event.</p>
+            </a>
+
+            <!-- Sales Card -->
+            <a href="/tickets/organizer/{{ event.event_id }}/paid" 
+               class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 hover:border-primary/30 transition-all">
+                <div class="icon-bg w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl">payments</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold font-headline">Sales Report</h3>
+                    <span class="material-symbols-outlined text-green-600 text-sm">trending_up</span>
+                </div>
+                <p class="text-on-surface-variant text-xs leading-relaxed">Track revenue and real-time ticket sales performance.</p>
+            </a>
+
+            <!-- Scanner Card -->
+            {% if event.is_suspended %}
+            <div class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 opacity-50 cursor-not-allowed">
+                <div class="icon-bg w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold font-headline">Guest Check-in</h3>
+                </div>
+                <p class="text-on-surface-variant text-xs font-bold leading-relaxed text-amber-500">Scanner Suspended.</p>
+            </div>
+            {% elif event.is_checkin_open %}
+            <a href="/tickets/organizer/{{ event.event_id }}/scanner" class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 hover:border-primary/30 transition-all">
+                <div class="icon-bg w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold font-headline">Guest Check-in</h3>
+                    <span class="material-symbols-outlined text-orange-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                </div>
+                <p class="text-on-surface-variant text-xs leading-relaxed">Launch the scanner to verify tickets at the venue entry.</p>
+            </a>
+            {% else %}
+            <div class="group stats-card bg-surface p-6 rounded-3xl border border-outline-variant/20 shadow-xl shadow-slate-200/40 opacity-60 cursor-not-allowed">
+                <div class="icon-bg w-14 h-14 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold font-headline">Guest Check-in</h3>
+                    <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Opens {{ event.event_date.strftime("%d %b") }}</span>
+                </div>
+                <p class="text-on-surface-variant text-xs font-bold leading-relaxed">Check-in will be available on the event day!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Media Gallery -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold font-headline">Media Gallery</h2>
+                <a href="/create_event/edit/{{ event.event_id }}" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                    <span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                    Manage Media
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Primary Banner / First Media -->
+                <div class="lg:col-span-2 relative h-[400px] rounded-[32px] overflow-hidden shadow-2xl group border border-outline-variant/20 bg-surface-variant">
+                    {% if banner_path %}
+                        {% if banner_path.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
+                            <video src="/{{ banner_path }}" class="w-full h-full object-cover" autoplay muted loop></video>
+                            <div class="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest z-20 backdrop-blur-sm">Video Banner</div>
+                        {% else %}
+                            <img src="/{{ banner_path }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute top-4 left-4 bg-primary/90 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest z-20 shadow-lg">Primary Banner</div>
+                        {% endif %}
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-on-surface-variant/20 italic">
+                            <span class="material-symbols-outlined text-6xl mb-2">image_not_supported</span>
+                            <p class="text-xs">No media uploaded yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Secondary Media Grid -->
+                <div class="grid grid-cols-2 lg:grid-cols-1 gap-6">
+                    {% for media in event_media %}
+                        {% if media.filepath != banner_path %}
+                        <div class="relative h-full min-h-[188px] rounded-[24px] overflow-hidden border border-outline-variant/30 shadow-sm bg-surface-variant group">
+                            {% if media.filepath.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
+                                <video src="/{{ media.filepath }}" class="w-full h-full object-cover" muted></video>
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                    <span class="material-symbols-outlined text-white text-3xl">play_circle</span>
+                                </div>
+                            {% else %}
+                                <img src="/{{ media.filepath }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if event_media|length < 4 %}
+                        {% for i in range(4 - event_media|length) %}
+                        <a href="/create_event/edit/{{ event.event_id }}" class="flex flex-col items-center justify-center h-full min-h-[188px] rounded-[24px] border-2 border-dashed border-outline-variant/50 text-on-surface-variant/40 hover:text-primary hover:border-primary/50 transition-all bg-surface/50 group">
+                            <span class="material-symbols-outlined text-3xl mb-2 group-hover:scale-110 transition-transform">add_a_photo</span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">Add Media</span>
+                        </a>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="h-px bg-outline-variant/30 w-full mb-12"></div>
+
+        <!-- Quick Info Table / Summary -->
+        <div class="w-full max-w-4xl space-y-8">
+            <section>
+                <h2 class="text-xl font-bold font-headline mb-4">Event Description</h2>
+                <p class="text-on-surface-variant leading-relaxed text-sm">
+                    {{ event.event_description or 'No description provided.' }}
+                </p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold font-headline mb-4">Contact & Socials</h2>
+                <div class="flex flex-wrap gap-3 text-sm font-medium">
+                    {% if event.website %}
+                    <a href="{{ event.website }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[18px]">language</span> Website
+                    </a>
+                    {% endif %}
+                    {% if event.contact_number %}
+                    <a href="tel:{{ event.contact_number }}" class="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[18px]">call</span> {{ event.contact_number }}
+                    </a>
+                    {% endif %}
+                    {% if event.public_email_contact %}
+                    <a href="mailto:{{ event.public_email_contact }}" class="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[18px]">mail</span> {{ event.public_email_contact }}
+                    </a>
+                    {% endif %}
+                    {% if event.facebook_link %}
+                    <a href="{{ event.facebook_link }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-blue-50/50 rounded-xl border border-blue-200/50 hover:border-blue-400 text-blue-600 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">facebook</span> Facebook
+                    </a>
+                    {% endif %}
+                    {% if event.twitter_link %}
+                    <a href="{{ event.twitter_link }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-sky-50/50 rounded-xl border border-sky-200/50 hover:border-sky-400 text-sky-500 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">chat</span> Twitter
+                    </a>
+                    {% endif %}
+                    {% if event.instagram_link %}
+                    <a href="{{ event.instagram_link }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-pink-50/50 rounded-xl border border-pink-200/50 hover:border-pink-400 text-pink-600 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">photo_camera</span> Instagram
+                    </a>
+                    {% endif %}
+                    {% if not event.website and not event.contact_number and not event.public_email_contact and not event.facebook_link and not event.twitter_link and not event.instagram_link %}
+                    <p class="text-on-surface-variant text-sm italic py-2">No contact or social links provided.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="max-w-5xl mx-auto pb-8">
+        {% if event.is_cancelled %}
+        <div class="flex items-center justify-end gap-2 text-on-surface-variant text-xs font-bold">
+            <span class="material-symbols-outlined text-sm">block</span>
+            <span>This event has been cancelled.</span>
+        </div>
+        {% elif has_withdrawal %}
+        <div class="flex items-center justify-end gap-2 text-on-surface-variant text-xs font-bold" title="A withdrawal has already been made for this event, so it cannot be cancelled.">
+            <span class="material-symbols-outlined text-sm">lock</span>
+            <span>Cancellation unavailable — withdrawal already made</span>
+        </div>
+        {% else %}
+        <div class="flex justify-end">
+            <button onclick="cancelEvent()" class="text-on-surface-variant/60 hover:text-error text-xs font-bold flex items-center gap-1.5 transition-colors">
+                <span class="material-symbols-outlined text-sm">block</span> Cancel Event
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Floating Decor -->
+    <div class="fixed top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -z-10 mix-blend-multiply opacity-50"></div>
+    <div class="fixed bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10 mix-blend-multiply opacity-50"></div>
+    
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" onclick="closeCustomModal()"></div>
+        <div id="modalPanel" class="bg-surface w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 transform scale-95 opacity-0 transition-all duration-300 overflow-hidden">
+            <div id="modalHeader" class="p-8 pb-4 flex flex-col items-center text-center">
+                <div id="modalIconContainer" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                    <span id="modalIcon" class="material-symbols-outlined text-3xl">warning</span>
+                </div>
+                <h3 id="modalTitle" class="text-2xl font-extrabold font-headline text-on-surface mb-2">Are you sure?</h3>
+                <p id="modalDescription" class="text-on-surface-variant text-sm leading-relaxed"></p>
+            </div>
+            <div class="p-8 pt-4 flex flex-col gap-3">
+                <button id="modalConfirmBtn" class="w-full py-4 rounded-2xl font-bold font-headline text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg"></button>
+                <button onclick="closeCustomModal()" class="w-full py-4 text-on-surface-variant font-bold font-headline text-sm hover:bg-surface-variant/50 rounded-2xl transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const customModal = document.getElementById('customModal');
+        const modalContent = document.getElementById('modalPanel');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+        function showCustomModal({ title, description, icon, type, confirmText, onConfirm }) {
+            modalTitle.innerText = title;
+            modalDescription.innerText = description;
+            modalIcon.innerText = icon || 'warning';
+            modalConfirmBtn.innerText = confirmText || 'Confirm';
+            
+            // Themes
+            modalIconContainer.classList.remove('bg-red-100', 'text-red-600', 'bg-amber-100', 'text-amber-600', 'bg-primary/10', 'text-primary');
+            modalConfirmBtn.classList.remove('bg-red-600', 'bg-amber-500', 'bg-primary', 'shadow-red-500/20', 'shadow-amber-500/20', 'shadow-primary/20');
+            
+            if (type === 'danger') {
+                modalIconContainer.classList.add('bg-red-100', 'text-red-600');
+                modalConfirmBtn.classList.add('bg-red-600', 'text-white', 'shadow-red-500/20');
+            } else if (type === 'warning') {
+                modalIconContainer.classList.add('bg-amber-100', 'text-amber-600');
+                modalConfirmBtn.classList.add('bg-amber-500', 'text-white', 'shadow-amber-500/20');
+            } else {
+                modalIconContainer.classList.add('bg-primary/10', 'text-primary');
+                modalConfirmBtn.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+            }
+
+            modalConfirmBtn.onclick = () => {
+                onConfirm();
+                closeCustomModal();
+            };
+
+            customModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeCustomModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                customModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function suspendEvent() {
+            const isActive = {% if event.is_suspended %}false{% else %}true{% endif %};
+            showCustomModal({
+                title: isActive ? 'Suspend Event?' : 'Resume Event?',
+                description: isActive ? 'This will temporarily pause check-ins and ticket issuance.' : 'This will reactivate scanning and ticketing for this event.',
+                icon: isActive ? 'pause_circle' : 'play_circle',
+                type: 'warning',
+                confirmText: isActive ? 'Pause Event' : 'Resume Now',
+                onConfirm: () => {
+                    fetch('/create_event/suspend/{{ event.event_id }}', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => window.location.reload())
+                    .catch(err => console.error("Error processing request."));
+                }
+            });
+        }
+
+        function cancelEvent() {
+            const sold = {% if has_sold_tickets %}true{% else %}false{% endif %};
+            showCustomModal({
+                title: 'Cancel Event?',
+                description: sold
+                    ? 'This will cancel the event and automatically initiate refunds of 94% of each ticket price to all buyers.'
+                    : 'This will permanently remove the event. This action cannot be undone.',
+                icon: 'block',
+                type: 'danger',
+                confirmText: sold ? 'Yes, Cancel & Refund' : 'Yes, Cancel Event',
+                onConfirm: () => {
+                    fetch('/create_event/delete/{{ event.event_id }}', { method: 'DELETE' })
+                    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (ok) {
+                            window.location.reload();
+                        } else {
+                            showCustomModal({
+                                title: 'Cancellation Blocked',
+                                description: data.message,
+                                icon: 'lock',
+                                type: 'warning',
+                                confirmText: 'OK',
+                                onConfirm: () => {}
+                            });
+                        }
+                    })
+                    .catch(err => console.error("Error processing request."));
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

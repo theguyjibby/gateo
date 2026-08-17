@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - Gateo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7e22ce',
+                        surface: '#ffffff',
+                        'surface-container': '#f3f4f6',
+                        'surface-container-low': '#f9fafb',
+                        'surface-container-highest': '#d1d5db',
+                        'on-surface': '#111827',
+                        'on-surface-variant': '#4b5563',
+                        'outline-variant': '#d1d5db'
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-surface-container-low min-h-screen text-on-surface font-body">
+    <main class="max-w-6xl mx-auto px-6 py-10">
+        <div class="flex items-center justify-between mb-10">
+            <nav class="flex items-center gap-2 text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest">
+                <a href="/dashboard" class="hover:text-primary transition-colors">Dashboard</a>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span>Team</span>
+            </nav>
+            <a href="/dashboard" class="w-10 h-10 rounded-full bg-surface border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Back to Dashboard">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+        </div>
+
+        <section class="mb-10">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">Team Access</h1>
+                    <p class="text-on-surface-variant mt-3 max-w-2xl">Choose an event, then invite admins or scanner team members to help manage the event.</p>
+                </div>
+                <a href="/create_event" class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-900/10">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    Create Event
+                </a>
+            </div>
+        </section>
+
+        {% if events %}
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in events %}
+            <a href="/organizer/{{ event.event_id }}/team" class="group bg-surface border border-outline-variant/40 rounded-xl p-6 hover:border-primary/40 hover:shadow-xl hover:shadow-purple-900/5 transition-all">
+                <div class="flex items-start justify-between gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-lg bg-purple-50 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined">groups</span>
+                    </div>
+                    {% if event.is_suspended %}
+                    <span class="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-full">Suspended</span>
+                    {% endif %}
+                </div>
+                <h2 class="text-xl font-extrabold font-headline mb-2 line-clamp-1">{{ event.event_name }}</h2>
+                <div class="space-y-2 text-sm text-on-surface-variant">
+                    <p class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                        {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'No date' }}
+                    </p>
+                    <p class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">location_on</span>
+                        <span class="line-clamp-1">{{ event.event_location }}</span>
+                    </p>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-bold text-primary">
+                    <span>Manage Team</span>
+                    <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </div>
+            </a>
+            {% endfor %}
+        </section>
+        {% else %}
+        <section class="bg-surface border border-outline-variant/40 rounded-xl p-10 text-center">
+            <div class="w-14 h-14 mx-auto rounded-lg bg-purple-50 text-primary flex items-center justify-center mb-5">
+                <span class="material-symbols-outlined">event_busy</span>
+            </div>
+            <h2 class="text-2xl font-extrabold font-headline mb-2">No events yet</h2>
+            <p class="text-on-surface-variant mb-6">Create an event before adding team members.</p>
+            <a href="/create_event" class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-lg font-bold text-sm">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Create Event
+            </a>
+        </section>
+        {% endif %}
+    </main>
+</body>
+
+</html>

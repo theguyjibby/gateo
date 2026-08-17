@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Gateo Dashboard - No Events</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary": "#7e22ce",
+            "on-primary": "#ffffff",
+            "primary-container": "#f3e8ff",
+            "on-primary-container": "#3b0764",
+            "primary-fixed": "#e9d5ff",
+            "on-primary-fixed": "#2e1065",
+            "primary-fixed-dim": "#d8b4fe",
+            "on-primary-fixed-variant": "#581c87",
+            "secondary": "#a855f7",
+            "on-secondary": "#ffffff",
+            "secondary-container": "#fae8ff",
+            "on-secondary-container": "#4a044e",
+            "secondary-fixed": "#f5d0fe",
+            "on-secondary-fixed": "#3b0764",
+            "secondary-fixed-dim": "#f0abfc",
+            "on-secondary-fixed-variant": "#701a75",
+            "tertiary": "#db2777",
+            "on-tertiary": "#ffffff",
+            "tertiary-container": "#fce7f3",
+            "on-tertiary-container": "#831843",
+            "tertiary-fixed": "#fbcfe8",
+            "on-tertiary-fixed": "#500724",
+            "tertiary-fixed-dim": "#f9a8d4",
+            "on-tertiary-fixed-variant": "#9d174d",
+            "surface-dim": "#e5e7eb",
+            "surface": "#ffffff",
+            "surface-bright": "#f9fafb",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f9fafb",
+            "surface-container": "#f3f4f6",
+            "surface-container-high": "#e5e7eb",
+            "surface-container-highest": "#d1d5db",
+            "on-surface": "#111827",
+            "on-surface-variant": "#4b5563",
+            "inverse-surface": "#1f2937",
+            "inverse-on-surface": "#f9fafb",
+            "inverse-primary": "#d8b4fe",
+            "surface-tint": "#7e22ce",
+            "background": "#fdfcff",
+            "on-background": "#111827",
+            "outline": "#9ca3af",
+            "outline-variant": "#d1d5db",
+            "error": "#dc2626",
+            "on-error": "#ffffff",
+            "error-container": "#fef2f2",
+            "on-error-container": "#7f1d1d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.625rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9f9ff;
+    }
+
+    .nav-active-pill::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 4px;
+      height: 32px;
+      background-color: #7e22ce;
+      border-radius: 0 4px 4px 0;
+    }
+  </style>
+</head>
+
+<body class="bg-surface text-on-surface">
+  <!-- SideNavBar (Execution from JSON) -->
+  <aside id="sidebar"
+    class="h-screen w-64 fixed left-0 top-0 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl flex flex-col h-full py-8 border-r-0 shadow-[0_20px_40px_-10px_rgba(20,27,43,0.05)] z-50 -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <div class="px-8 mb-10">
+      <h1 class="text-2xl font-bold tracking-tighter text-indigo-700 dark:text-indigo-500 font-headline">Gateo</h1>
+      <p class="text-xs text-on-surface-variant font-medium tracking-tight">Event Management</p>
+    </div>
+    <nav class="flex-1 space-y-1">
+      <!-- Active Tab: Dashboard -->
+      <a class="relative text-indigo-700 dark:text-indigo-300 font-bold font-headline tracking-tight text-sm px-8 py-3 flex items-center gap-3 transition-all duration-200 active:scale-95 nav-active-pill"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="/events">
+        <span class="material-symbols-outlined" data-icon="event">event</span>
+        <span>Events</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+        <span>Tickets</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+        <span>Scanner</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="/team">
+        <span class="material-symbols-outlined" data-icon="groups">groups</span>
+        <span>Team</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="/cashier">
+        <span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+        <span>Cashier</span>
+      </a>
+      <a class="text-slate-500 dark:text-slate-400 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+    <div class="px-6 mt-auto">
+      <a href="/create_event"
+        class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-DEFAULT font-headline font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all text-center block">
+        Create Event
+      </a>
+      <div class="mt-8 flex items-center gap-3 px-2">
+        <div
+          class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden">
+          <img alt="Gateo Workspace" class="w-full h-full object-cover"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDohqIKRN3a7UO6mNleALahZLmQwGZFzWKfS1C1ouuGCKAfAIwaEeBdq4UD4F7dcGRBnkSlRUkUECzhXfzf2ZxHonqDRXelplYILJIBUy07fHG7-jBO6QKNQnxFDVMhd-JZK7Ca9NdWN6dVT4LympGon-zjEQlkG-mar3OHZdZTHF_JmXu5WoYLlewsEaDsvMte_WxC9K-22K6kUV4YKFjT9fU5lVjY7Lvtx4NkGzFNeek9SCRXVChkbApzXrBfaZOGlviHOjdy9Y8" />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xs font-bold font-headline">{{current_user.username if current_user.is_authenticated else
+            'Guest'}}</span>
+          <span class="text-[10px] text-on-surface-variant">{{current_user.email if current_user.is_authenticated else
+            ''}}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <!-- TopNavBar (Execution from JSON) -->
+  <header
+    class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center px-4 lg:px-8 w-full z-40">
+    <div class="flex items-center gap-3 flex-1">
+      <button onclick="toggleSidebar()" class="lg:hidden text-slate-600 hover:text-indigo-600 p-1 active:scale-90 transition-all">
+        <span class="material-symbols-outlined text-[28px]">menu</span>
+      </button>
+      <div class="relative w-full max-w-md">
+        <span
+          class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+        <input
+          class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/15 focus:ring-primary/40 rounded-DEFAULT pl-10 pr-4 py-2 text-sm font-body"
+          placeholder="Search events, orders, or customers..." type="text" />
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <button class="text-slate-500 hover:text-indigo-500 transition-transform">
+        <span class="material-symbols-outlined">dark_mode</span>
+      </button>
+      <button class="text-slate-500 hover:text-indigo-500 transition-transform">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <div
+        class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden cursor-pointer active:scale-95 transition-transform">
+        <img alt="User Profile" class="w-full h-full object-cover"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnhzXANJ8BakS0Umi8LSUbv93Xe7NmkeAUtbegD2Wub5pD6z-Y_dqzPZk3FofSwHYKMuvviLQDMcCeT2q5ZwZDYZT8FWQTSgsBl_Gq76AwBRtiP3FtHJWCTMR5YtNduTKrXlj2Iyi2glg7XYHyUmfdIyS5DEe40npJx4Y38SVxyeX77clCp9hE1SeQkjQBuEKj5wO7oWTpYvmR59sqGBS2sZEtNyztrm6tsVomVvXLaatjPZZs7bzfJVA6nm8S_HIkwYpuY6-dk4g" />
+      </div>
+    </div>
+  </header>
+  <!-- Main Content Canvas -->
+  <main class="lg:ml-64 pt-16 min-h-screen p-4 sm:p-6 lg:p-12">
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden w-full max-w-3xl mx-auto flex flex-col items-center text-center mt-20">
+      <!-- Bento Illustration Grid -->
+      <div class="grid grid-cols-6 grid-rows-3 gap-4 w-full h-64 mb-12 opacity-80">
+        <div
+          class="col-span-2 row-span-2 bg-surface-container-low rounded-xl flex items-center justify-center p-6 relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+          <span class="material-symbols-outlined text-primary/40 text-6xl"
+            style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+        </div>
+        <div class="col-span-4 row-span-1 bg-surface-container-highest/30 rounded-xl flex items-center px-8 gap-4">
+          <div class="h-2 w-24 bg-primary/10 rounded-full"></div>
+          <div class="h-2 w-12 bg-primary/10 rounded-full"></div>
+          <div class="h-2 w-32 bg-primary/10 rounded-full ml-auto"></div>
+        </div>
+        <div
+          class="col-span-2 row-span-2 bg-secondary-container/10 rounded-xl flex flex-col justify-center items-start px-8 gap-2 border border-secondary-container/20">
+          <span class="material-symbols-outlined text-secondary text-4xl">calendar_today</span>
+          <div class="h-3 w-16 bg-secondary/20 rounded-full"></div>
+        </div>
+        <div class="col-span-2 row-span-1 bg-tertiary-fixed/20 rounded-xl flex items-center justify-center">
+          <span class="material-symbols-outlined text-tertiary/40">groups</span>
+        </div>
+        <div
+          class="col-span-2 row-span-1 bg-white rounded-xl shadow-sm flex items-center justify-center border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary/30">analytics</span>
+        </div>
+      </div>
+      <!-- Empty State Typography -->
+      <div class="space-y-4 max-w-lg">
+        <h2 class="text-4xl font-extrabold font-headline tracking-tighter text-on-surface">No Events Yet</h2>
+        <p class="text-on-surface-variant text-lg font-body leading-relaxed">
+          Create your first event and start managing tickets. Our seamless setup process helps you go live in under 5
+          minutes.
+        </p>
+      </div>
+      <!-- CTA Cluster -->
+      <div class="mt-10 flex flex-col sm:flex-row items-center gap-4">
+        <a href="/create_event"
+          class="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-DEFAULT font-headline font-bold text-base shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined">add</span>
+          Create Event
+        </a>
+        <button
+          class="px-8 py-4 bg-surface-container-highest text-on-surface rounded-DEFAULT font-headline font-bold text-base hover:bg-surface-container-high active:scale-95 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-on-surface-variant">play_circle</span>
+          Watch Tutorial
+        </button>
+      </div>
+      <!-- Contextual Hint -->
+      <div
+        class="mt-16 p-6 rounded-xl bg-surface-container-low/50 border border-outline-variant/10 flex items-center gap-6 text-left max-w-xl">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary">lightbulb</span>
+        </div>
+        <div>
+          <h4 class="font-bold text-sm font-headline text-on-surface">Pro Tip: Bulk Import</h4>
+          <p class="text-xs text-on-surface-variant font-body">Already have events elsewhere? You can import your CSV
+            data directly from the settings menu.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Events Grid -->
+    <div id="eventsContainer" class="hidden w-full max-w-6xl mx-auto">
+      <div class="flex justify-between items-end mb-10">
+        <div>
+          <h2 class="text-4xl font-extrabold font-headline tracking-tighter text-on-surface">Your Events</h2>
+          <p class="text-on-surface-variant mt-2">Manage and monitor your upcoming and past events.</p>
+        </div>
+        <a href="/create_event"
+          class="px-6 py-3 bg-primary text-white rounded-DEFAULT font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+          <span class="material-symbols-outlined">add</span>
+          Add New Event
+        </a>
+      </div>
+      <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadEvents() {
+      const emptyState = document.getElementById('emptyState');
+      const eventsContainer = document.getElementById('eventsContainer');
+      const eventsList = document.getElementById('eventsList');
+
+      try {
+        const response = await fetch('/event/organizer');
+        const data = await response.json();
+        const events = data.events;
+
+        if (events && events.length > 0) {
+          emptyState.classList.add('hidden');
+          eventsContainer.classList.remove('hidden');
+
+          eventsList.innerHTML = events.map(event => `
+                    <div class="group bg-surface border border-outline-variant/20 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all" id="event-card-${event.event_id}">
+                        <div class="h-48 bg-surface-container-highest relative overflow-hidden">
+                            ${event.media ?
+              `<img src="/${event.media}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">` :
+              `<div class="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20">
+                                    <span class="material-symbols-outlined text-6xl">image</span>
+                                </div>`
+            }
+                            ${event.is_suspended ? 
+                                `<div class="absolute top-4 right-4 px-3 py-1 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold rounded-full border border-white/20 flex items-center gap-1 shadow-lg">
+                                    <span class="material-symbols-outlined text-[12px]">pause</span> SUSPENDED
+                                </div>` : ''
+                            }
+                            ${event.is_cancelled ? 
+                                `<div class="absolute top-4 right-4 px-3 py-1 bg-red-600/90 backdrop-blur-md text-white text-[10px] font-bold rounded-full border border-white/20 flex items-center gap-1 shadow-lg">
+                                    <span class="material-symbols-outlined text-[12px]">block</span> CANCELLED
+                                </div>` : ''
+                            }
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-extrabold font-headline text-on-surface mb-2 line-clamp-1">${event.event_name}</h3>
+                            <div class="flex flex-col gap-2 mb-6">
+                                <div class="flex items-center gap-2 text-on-surface-variant text-xs">
+                                    <span class="material-symbols-outlined text-sm">calendar_month</span>
+                                    <span>${event.event_date} ${event.event_time}</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-on-surface-variant text-xs">
+                                    <span class="material-symbols-outlined text-sm">location_on</span>
+                                    <span class="line-clamp-1">${event.event_location}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="copyEventLink(this, '${event.event_slug}')" class="p-2.5 bg-surface-container-highest rounded-lg hover:bg-primary hover:text-white transition-all duration-200 group relative" title="Copy Public Link">
+                                    <span class="material-symbols-outlined text-sm">link</span>
+                                    <!-- Tooltip -->
+                                    <span class="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-on-surface text-surface text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Copy Link</span>
+                                </button>
+                                <a href="/e/${event.event_slug}" target="_blank" class="p-2.5 bg-surface-container-highest rounded-lg hover:bg-primary hover:text-white transition-colors" title="View Public Page">
+                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                </a>
+                                <a href="/organizer/${event.event_id}/team" class="p-2.5 bg-surface-container-highest rounded-lg hover:bg-primary hover:text-white transition-colors" title="Manage Team">
+                                    <span class="material-symbols-outlined text-sm">groups</span>
+                                </a>
+                                <a href="/event/${event.event_slug}/manage" class="flex-1 text-center py-2.5 bg-surface-container-highest rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-colors">Manage</a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        } else {
+          emptyState.classList.remove('hidden');
+          eventsContainer.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Failed to load events:', err);
+      }
+    }
+  </script>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden text-left">
+        <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeCustomModal()"></div>
+        <div id="modalPanel" class="bg-surface w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 transform scale-95 opacity-0 transition-all duration-300 overflow-hidden">
+            <div id="modalHeader" class="p-8 pb-4 flex flex-col items-center text-center">
+                <div id="modalIconContainer" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                    <span id="modalIcon" class="material-symbols-outlined text-3xl">warning</span>
+                </div>
+                <h3 id="modalTitle" class="text-2xl font-extrabold font-headline text-on-surface mb-2">Are you sure?</h3>
+                <p id="modalDescription" class="text-on-surface-variant text-sm leading-relaxed"></p>
+            </div>
+            <div class="p-8 pt-4 flex flex-col gap-3">
+                <button id="modalConfirmBtn" class="w-full py-4 rounded-2xl font-bold font-headline text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg"></button>
+                <button onclick="closeCustomModal()" class="w-full py-4 text-on-surface-variant font-bold font-headline text-sm hover:bg-surface-variant/50 rounded-2xl transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const customModal = document.getElementById('customModal');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalContent = document.getElementById('modalPanel');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+        function showCustomModal({ title, description, icon, type, confirmText, onConfirm }) {
+            modalTitle.innerText = title;
+            modalDescription.innerText = description;
+            modalIcon.innerText = icon || 'warning';
+            modalConfirmBtn.innerText = confirmText || 'Confirm';
+            
+            // Themes
+            modalIconContainer.classList.remove('bg-red-100', 'text-red-600', 'bg-amber-100', 'text-amber-600', 'bg-primary/10', 'text-primary');
+            modalConfirmBtn.classList.remove('bg-red-600', 'bg-amber-500', 'bg-primary', 'shadow-red-500/20', 'shadow-amber-500/20', 'shadow-primary/20');
+            
+            if (type === 'danger') {
+                modalIconContainer.classList.add('bg-red-100', 'text-red-600');
+                modalConfirmBtn.classList.add('bg-red-600', 'text-white', 'shadow-red-500/20');
+            } else if (type === 'warning') {
+                modalIconContainer.classList.add('bg-amber-100', 'text-amber-600');
+                modalConfirmBtn.classList.add('bg-amber-500', 'text-white', 'shadow-amber-500/20');
+            } else {
+                modalIconContainer.classList.add('bg-primary/10', 'text-primary');
+                modalConfirmBtn.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+            }
+
+            modalConfirmBtn.onclick = () => {
+                onConfirm();
+                closeCustomModal();
+            };
+
+            customModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modalBackdrop.classList.add('opacity-100');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeCustomModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modalBackdrop.classList.remove('opacity-100');
+            modalBackdrop.classList.add('opacity-0');
+            setTimeout(() => {
+                customModal.classList.add('hidden');
+            }, 300);
+        }
+        
+    function copyEventLink(button, slug) {
+        const url = window.location.origin + '/e/' + slug;
+        navigator.clipboard.writeText(url).then(() => {
+            const icon = button.querySelector('.material-symbols-outlined');
+            const tooltip = button.querySelector('span:last-child');
+            const originalIcon = icon.innerText;
+            const originalTooltip = tooltip.innerText;
+            
+            // Visual feedback
+            icon.innerText = 'check';
+            icon.classList.add('text-green-500');
+            tooltip.innerText = 'Copied!';
+            tooltip.classList.remove('opacity-0');
+            tooltip.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                icon.innerText = originalIcon;
+                icon.classList.remove('text-green-500');
+                tooltip.innerText = originalTooltip;
+                tooltip.classList.remove('opacity-100');
+                tooltip.classList.add('opacity-0');
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadEvents);
+  </script>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('sidebarOverlay').classList.add('hidden');
+    }
+  </script>
+
+  <!-- Mobile sidebar overlay -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+  <!-- Floating Decor -->
+  <div class="fixed bottom-0 right-0 w-96 h-96 -z-10 pointer-events-none overflow-hidden">
+    <div class="absolute bottom-[-10%] right-[-10%] w-full h-full bg-primary/5 rounded-full blur-3xl"></div>
+  </div>
+</body>
+
+</html>

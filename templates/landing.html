@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Gateo - Modern Event Management Software</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#7e22ce",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#f3e8ff",
+                        "on-primary-container": "#3b0764",
+                        "primary-fixed": "#e9d5ff",
+                        "on-primary-fixed": "#2e1065",
+                        "primary-fixed-dim": "#d8b4fe",
+                        "on-primary-fixed-variant": "#581c87",
+                        "secondary": "#a855f7",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fae8ff",
+                        "on-secondary-container": "#4a044e",
+                        "secondary-fixed": "#f5d0fe",
+                        "on-secondary-fixed": "#3b0764",
+                        "secondary-fixed-dim": "#f0abfc",
+                        "on-secondary-fixed-variant": "#701a75",
+                        "tertiary": "#db2777",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#fce7f3",
+                        "on-tertiary-container": "#831843",
+                        "tertiary-fixed": "#fbcfe8",
+                        "on-tertiary-fixed": "#500724",
+                        "tertiary-fixed-dim": "#f9a8d4",
+                        "on-tertiary-fixed-variant": "#9d174d",
+                        "surface-dim": "#e5e7eb",
+                        "surface": "#ffffff",
+                        "surface-bright": "#f9fafb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f9fafb",
+                        "surface-container": "#f3f4f6",
+                        "surface-container-high": "#e5e7eb",
+                        "surface-container-highest": "#d1d5db",
+                        "on-surface": "#111827",
+                        "on-surface-variant": "#4b5563",
+                        "inverse-surface": "#1f2937",
+                        "inverse-on-surface": "#f9fafb",
+                        "inverse-primary": "#d8b4fe",
+                        "surface-tint": "#7e22ce",
+                        "background": "#fdfcff",
+                        "on-background": "#111827",
+                        "outline": "#9ca3af",
+                        "outline-variant": "#d1d5db",
+                        "error": "#dc2626",
+                        "on-error": "#ffffff",
+                        "error-container": "#fef2f2",
+                        "on-error-container": "#7f1d1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.625rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9ff;
+        }
+
+        .hero-pattern {
+            background-image: radial-gradient(circle at 5px 5px, rgba(126, 34, 206, 0.05) 2px, transparent 0);
+            background-size: 32px 32px;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-on-surface scroll-smooth flex flex-col min-h-screen relative overflow-x-hidden">
+
+    <!-- Navbar -->
+    <header
+        class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 z-50 transition-all duration-300 h-20 flex items-center">
+        <div class="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-primary to-primary-container rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-white"
+                        style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                </div>
+                <span class="font-headline font-bold text-2xl tracking-tighter text-on-surface">Gateo</span>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-8 font-headline font-medium text-sm text-on-surface-variant">
+                <a href="#features" class="hover:text-primary transition-colors duration-200">Features</a>
+                <a href="#events" class="hover:text-primary transition-colors duration-200">Events</a>
+                <a href="#solutions" class="hover:text-primary transition-colors duration-200">Solutions</a>
+                <a href="#pricing" class="hover:text-primary transition-colors duration-200">Pricing</a>
+                <a href="#resources" class="hover:text-primary transition-colors duration-200">Resources</a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <a href="/login"
+                    class="hidden sm:block font-headline font-bold text-sm text-on-surface hover:text-primary transition-colors">Sign
+                    In</a>
+                <a href="/register"
+                    class="px-6 py-2.5 bg-on-surface text-surface rounded-full font-headline font-bold text-sm shadow-xl shadow-on-surface/10 hover:-translate-y-0.5 active:scale-95 transition-all duration-200">Get
+                    Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Floating Decor Gradients -->
+    <div
+        class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none">
+    </div>
+    <div
+        class="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[100px] -z-10 pointer-events-none">
+    </div>
+
+    <main class="flex-grow pt-32 pb-20">
+
+        <!-- Hero Section -->
+        <section class="max-w-7xl mx-auto px-6 pt-16 lg:pt-24 pb-20 flex flex-col items-center text-center relative">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant/20 mb-8 animate-fade-in-up">
+                <span class="flex h-2 w-2 relative">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span class="text-xs font-bold font-headline text-primary">Gateo 2.0 is now live</span>
+            </div>
+
+            <h1
+                class="text-5xl md:text-7xl font-extrabold font-headline tracking-tighter text-on-surface max-w-4xl leading-[1.1] mb-6">
+                Host unforgettable events. <br />
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-container to-secondary">Manage
+                    them effortlessly.</span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-on-surface-variant font-body max-w-2xl mb-12 leading-relaxed">
+                The all-in-one platform for ticketing, seating, and attendee check-ins. Launch your next gathering in
+                under 5 minutes without writing a single line of code.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <a href="/register"
+                    class="w-full sm:w-auto px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-base shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2">
+                    Create Your First Event
+                    <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                </a>
+                <button
+                    class="w-full sm:w-auto px-8 py-4 bg-surface-container-highest text-on-surface rounded-xl font-headline font-bold text-base hover:bg-surface-container-high transition-all flex items-center justify-center gap-2 group">
+                    <span
+                        class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">play_circle</span>
+                    Watch Demo
+                </button>
+            </div>
+
+            <!-- Hero Image/Dashboard Preview -->
+            <div class="mt-20 w-full max-w-6xl relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent z-10"></div>
+                <div
+                    class="rounded-2xl border border-outline-variant/15 shadow-2xl shadow-primary/10 overflow-hidden bg-white hero-pattern relative">
+                    <!-- Faux browser UI -->
+                    <div
+                        class="h-10 bg-surface-container-low border-b border-outline-variant/15 flex items-center px-4 gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <!-- Imaginary Dashboard Content -->
+                    <div
+                        class="p-8 aspect-video md:aspect-[21/9] flex items-center justify-center relative bg-white/50 backdrop-blur-sm">
+
+                        <!-- Bento aesthetic matching the empty state -->
+                        <div
+                            class="grid grid-cols-6 grid-rows-3 gap-4 w-full h-full max-w-4xl mx-auto opacity-70 scale-90 md:scale-100">
+                            <div
+                                class="col-span-2 row-span-2 bg-primary/5 rounded-2xl flex items-center justify-center p-6 border border-primary/10">
+                                <span class="material-symbols-outlined text-primary/40 text-6xl"
+                                    style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+                            </div>
+                            <div
+                                class="col-span-4 row-span-1 bg-surface-container-highest/50 rounded-2xl flex items-center px-8 gap-4 border border-outline-variant/10">
+                                <div class="h-2 w-24 bg-primary/20 rounded-full"></div>
+                                <div class="h-2 w-12 bg-primary/20 rounded-full"></div>
+                                <div class="h-2 w-32 bg-primary/20 rounded-full ml-auto"></div>
+                            </div>
+                            <div
+                                class="col-span-2 row-span-2 bg-secondary-container/20 rounded-2xl flex flex-col justify-center items-start px-8 gap-4 border border-secondary-container/30">
+                                <span class="material-symbols-outlined text-secondary text-5xl">calendar_today</span>
+                                <div class="h-3 w-20 bg-secondary/30 rounded-full"></div>
+                                <div class="h-2 w-12 bg-secondary/20 rounded-full"></div>
+                            </div>
+                            <div
+                                class="col-span-2 row-span-1 bg-tertiary-fixed/30 rounded-2xl flex items-center justify-center border border-tertiary/10">
+                                <span class="material-symbols-outlined text-tertiary/50 text-4xl">groups</span>
+                            </div>
+                            <div
+                                class="col-span-2 row-span-1 bg-white rounded-2xl flex items-center justify-center border border-outline-variant/15 shadow-sm">
+                                <span class="material-symbols-outlined text-primary/40 text-4xl">analytics</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logo Cloud / Social Proof -->
+        <section class="border-y border-outline-variant/10 bg-surface-container-low/50 py-12 mb-24">
+            <div class="max-w-7xl mx-auto px-6 flex flex-col items-center">
+                <p class="text-sm font-bold font-headline text-on-surface-variant mb-6 uppercase tracking-widest">
+                    Trusted by leading event organizers</p>
+                <div class="flex flex-wrap justify-center gap-12 opacity-50 grayscale">
+                    <!-- Placeholder Logos using flex and typography -->
+                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-3xl">token</span>
+                        <span class="text-xl font-bold font-headline">AcmeCorp</span>
+                    </div>
+                    <div class="flex items-center gap-2"><span
+                            class="material-symbols-outlined text-3xl">all_inclusive</span> <span
+                            class="text-xl font-bold font-headline">Infinite Events</span></div>
+                    <div class="flex items-center gap-2"><span
+                            class="material-symbols-outlined text-3xl">language</span> <span
+                            class="text-xl font-bold font-headline">GlobalSummits</span></div>
+                    <div class="flex items-center gap-2 hidden md:flex"><span
+                            class="material-symbols-outlined text-3xl">eco</span> <span
+                            class="text-xl font-bold font-headline">GreenFest</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upcoming Events -->
+        <section id="events" class="max-w-7xl mx-auto px-6 py-12 mb-12 scroll-mt-24">
+            <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <h2 class="text-3xl md:text-4xl font-extrabold font-headline tracking-tighter text-on-surface">Upcoming Events</h2>
+                {% if events %}
+                <div class="relative w-full md:w-80">
+                    <span
+                        class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 text-xl">search</span>
+                    <input type="text" id="eventSearch" placeholder="Search by name, location, or organizer..."
+                        class="w-full pl-11 pr-4 py-3 bg-surface-container border border-outline-variant/20 rounded-2xl text-sm font-body text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary outline-none transition-all">
+                </div>
+                {% endif %}
+            </div>
+
+            {% if events %}
+            <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {% for event in events %}
+                <a href="/e/{{ event.event_slug }}"
+                    class="event-card min-h-[480px] relative rounded-[2rem] overflow-hidden group cursor-pointer shadow-xl shadow-surface-variant/50 border border-outline-variant/10 flex-shrink-0"
+                    data-name="{{ event.event_name }}" data-location="{{ event.event_location }} {{ event.event_country }}"
+                    data-organizer="{{ event.organizer_name }}" data-description="{{ event.event_description }}"
+                    data-free="{% if event.lowest_price <= 0 %}free{% else %}paid{% endif %}">
+                    {% if event.media %}
+                    <div class="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-1000 ease-out"
+                        style="background-image: url('/{{ event.media }}');">
+                    </div>
+                    {% else %}
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary to-secondary group-hover:scale-110 transition-transform duration-1000 ease-out">
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20 opacity-95 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col items-start text-left transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                        {% if event.lowest_price <= 0 %}
+                        <span class="text-[10px] font-bold tracking-widest text-green-400 uppercase mb-3">Free Event</span>
+                        {% else %}
+                        <span class="text-[10px] font-bold tracking-widest text-[#facc15] uppercase mb-3">From ₦{{ "{:,.0f}".format(event.lowest_price) }}</span>
+                        {% endif %}
+                        <h3 class="text-2xl font-extrabold text-white leading-tight mb-3 font-headline line-clamp-2">{{ event.event_name }}</h3>
+                        <div class="space-y-1.5 mb-3">
+                            <p class="text-sm text-white/90 font-body font-medium flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">calendar_today</span>
+                                {{ event.event_date }}{% if event.event_time %} • {{ event.event_time }}{% endif %}
+                            </p>
+                            <p class="text-sm text-white/90 font-body font-medium flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">location_on</span>
+                                {{ event.event_location }}{% if event.event_country %}, {{ event.event_country }}{% endif %}
+                            </p>
+                        </div>
+                        {% if event.event_description %}
+                        <p class="text-xs text-white/80 font-body line-clamp-2 mb-2">{{ event.event_description }}</p>
+                        {% endif %}
+                        <p class="text-[11px] text-white/70 font-headline font-bold">Organized by {{ event.organizer_name or 'Unknown' }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            <div id="eventSearchEmpty" class="hidden text-center py-16">
+                <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">search_off</span>
+                <p class="text-on-surface-variant text-base font-medium">No events match your search.</p>
+            </div>
+            {% else %}
+            <div class="text-center py-16">
+                <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">event_busy</span>
+                <p class="text-on-surface-variant text-base font-medium">No upcoming events yet. Check back soon!</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Features Bento Grid -->
+        <section id="features" class="max-w-7xl mx-auto px-6 py-20 relative">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface mb-4">
+                    Everything you need. <br /> Nothing you don't.</h2>
+                <p class="text-on-surface-variant font-body text-lg max-w-2xl mx-auto">Gateo eliminates the friction
+                    from event management, giving you beautiful tools that just work right out of the box.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
+                <!-- Feature 1 -->
+                <div
+                    class="md:col-span-2 bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 group-hover:bg-primary/10 transition-colors">
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-primary"
+                            style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+                    </div>
+                    <h3 class="text-2xl font-bold font-headline text-on-surface mb-2">Lightning-fast Scanning</h3>
+                    <p class="text-on-surface-variant font-body mb-8 max-w-md">Our mobile-optimized scanner web app lets
+                        your door staff check in attendees in milliseconds. Works flawlessly even on spotty connections.
+                    </p>
+                    <div
+                        class="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl h-32 relative overflow-hidden flex items-end justify-center px-4">
+                        <div
+                            class="w-48 h-24 bg-surface rounded-t-2xl shadow-lg border-x border-t border-outline-variant/10 flex flex-col p-4 relative">
+                            <div class="w-full h-2 bg-green-500/20 rounded-full mb-2"></div>
+                            <div class="flex items-center justify-center flex-1">
+                                <span class="material-symbols-outlined text-green-500 text-3xl">check_circle</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div
+                    class="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10 hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-secondary"
+                            style="font-variation-settings: 'FILL' 1;">analytics</span>
+                    </div>
+                    <h3 class="text-2xl font-bold font-headline text-on-surface mb-2">Real-time Analytics</h3>
+                    <p class="text-on-surface-variant font-body">Track ticket sales, attendance drop-off, and revenue as
+                        it happens. Make data-driven decisions on the fly.</p>
+                    <div class="mt-8 flex items-end gap-2 h-20 opacity-70">
+                        <div class="w-1/4 bg-primary/40 rounded-t-md h-[40%]"></div>
+                        <div class="w-1/4 bg-primary/60 rounded-t-md h-[70%]"></div>
+                        <div class="w-1/4 bg-primary/80 rounded-t-md h-[50%]"></div>
+                        <div class="w-1/4 bg-primary rounded-t-md h-[90%]"></div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div
+                    class="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-tertiary"
+                            style="font-variation-settings: 'FILL' 1;">design_services</span>
+                    </div>
+                    <h3 class="text-2xl font-bold font-headline text-on-surface mb-2">Custom Ticketing Pages</h3>
+                    <p class="text-on-surface-variant font-body">Create stunning, branded checkout experiences that
+                        convert. No coding required.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div
+                    class="md:col-span-2 bg-white rounded-3xl p-8 border border-outline-variant/15 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-primary"
+                            style="font-variation-settings: 'FILL' 1;">group_add</span>
+                    </div>
+                    <h3 class="text-2xl font-bold font-headline text-on-surface mb-2">Team Collaboration</h3>
+                    <p class="text-on-surface-variant font-body max-w-md">Invite co-organizers, volunteers, and finance
+                        teams with granular role-based access control.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="max-w-5xl mx-auto px-6 py-24">
+            <div class="bg-on-surface rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
+                <!-- Abstract dark bg art -->
+                <div class="absolute inset-0 opacity-20">
+                    <div
+                        class="absolute top-[-20%] left-[-10%] w-[300px] h-[300px] bg-primary rounded-full blur-[100px]">
+                    </div>
+                    <div
+                        class="absolute bottom-[-20%] right-[-10%] w-[300px] h-[300px] bg-secondary rounded-full blur-[100px]">
+                    </div>
+                </div>
+
+                <div class="relative z-10 text-center">
+                    <h2 class="text-4xl md:text-5xl font-extrabold font-headline text-white tracking-tighter mb-6">Ready
+                        to upgrade your events?</h2>
+                    <p class="text-surface-variant text-lg font-body max-w-xl mx-auto mb-10">Join thousands of creators
+                        hosting seamless, stress-free events on Gateo.</p>
+                    <a href="/register"
+                        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-on-surface rounded-xl font-headline font-bold text-base hover:bg-surface-container transition-colors active:scale-95 duration-200">
+                        Get Started for Free
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-outline-variant/20 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div class="col-span-1 md:col-span-1">
+                <div class="flex items-center gap-2 mb-4">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-primary to-primary-container rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-sm"
+                            style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    </div>
+                    <span class="font-headline font-bold text-xl tracking-tighter text-on-surface">Gateo</span>
+                </div>
+                <p class="text-on-surface-variant text-sm font-body max-w-xs">Connecting people through beautifully
+                    managed events and frictionless ticketing.</p>
+            </div>
+
+            <div>
+                <h4 class="font-bold font-headline text-on-surface mb-4">Product</h4>
+                <ul class="space-y-3 text-sm font-body text-on-surface-variant flex flex-col">
+                    <a href="#" class="hover:text-primary transition-colors">Features</a>
+                    <a href="#" class="hover:text-primary transition-colors">Pricing</a>
+                    <a href="#" class="hover:text-primary transition-colors">Scanner App</a>
+                    <a href="#" class="hover:text-primary transition-colors">Integrations</a>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold font-headline text-on-surface mb-4">Resources</h4>
+                <ul class="space-y-3 text-sm font-body text-on-surface-variant flex flex-col">
+                    <a href="#" class="hover:text-primary transition-colors">Documentation</a>
+                    <a href="#" class="hover:text-primary transition-colors">Help Center</a>
+                    <a href="#" class="hover:text-primary transition-colors">Blog</a>
+                    <a href="#" class="hover:text-primary transition-colors">API Reference</a>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-bold font-headline text-on-surface mb-4">Legal</h4>
+                <ul class="space-y-3 text-sm font-body text-on-surface-variant flex flex-col">
+                    <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
+                    <a href="#" class="hover:text-primary transition-colors">Cookie Policy</a>
+                </ul>
+            </div>
+        </div>
+        <div
+            class="max-w-7xl mx-auto px-6 border-t border-outline-variant/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-on-surface-variant font-body">&copy; 2026 Gateo Inc. All rights reserved.</p>
+            <div class="flex items-center gap-4 text-on-surface-variant">
+                <a href="#" class="hover:text-primary"><span class="material-symbols-outlined">share</span></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal Container -->
+    <div id="authModal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-surface rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden transform scale-95 transition-all duration-300" id="authModalContent">
+            <!-- Header -->
+            <div class="px-8 pt-8 pb-6 flex items-center justify-between border-b border-outline-variant/10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary to-primary-container rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    </div>
+                    <span class="font-headline font-bold text-xl tracking-tighter text-on-surface" id="authModalTitle">Sign In</span>
+                </div>
+                <button onclick="closeAuthModal()" class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            
+            <div class="p-8">
+                <!-- Message Banner -->
+                <div id="authMessage" class="hidden mb-6 p-4 rounded-xl text-sm font-medium font-body border"></div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-5" onsubmit="handleAuth(event, '/login')">
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Email</label>
+                        <input type="email" name="email" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="you@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Password</label>
+                        <input type="password" name="password" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-on-surface text-surface rounded-xl font-headline font-bold text-sm shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 mt-2">Sign In to Gateo</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="hidden space-y-5" onsubmit="handleAuth(event, '/register')">
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Username</label>
+                        <input type="text" name="username" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="gateohost">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Email</label>
+                        <input type="email" name="email" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="you@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Password</label>
+                        <input type="password" name="password" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Confirm Password</label>
+                        <input type="password" name="verify_password" required class="w-full bg-surface-container border-none ring-1 ring-outline-variant/30 focus:ring-primary rounded-xl px-4 py-3 text-sm font-body text-on-surface placeholder:text-on-surface-variant/50" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-sm shadow-xl shadow-primary/20 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 mt-2">Create Account</button>
+                </form>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-4 my-6">
+                    <div class="flex-1 h-px bg-outline-variant/20"></div>
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">or sign in with</span>
+                    <div class="flex-1 h-px bg-outline-variant/20"></div>
+                </div>
+
+                <a href="/login/google" class="w-full py-3 bg-surface-container-highest text-on-surface rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-3 hover:bg-surface-container-high transition-colors">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Google
+                </a>
+
+                <!-- Footer Toggles -->
+                <div class="mt-8 text-center" id="switchToRegister">
+                    <p class="text-sm text-on-surface-variant">Don't have an account? <button onclick="toggleModalView('register')" class="text-primary font-bold hover:underline font-headline ml-1">Sign Up</button></p>
+                </div>
+                <div class="mt-8 text-center hidden" id="switchToLogin">
+                    <p class="text-sm text-on-surface-variant">Already have an account? <button onclick="toggleModalView('login')" class="text-primary font-bold hover:underline font-headline ml-1">Sign In</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Search -->
+    <script>
+        const eventSearch = document.getElementById('eventSearch');
+        if (eventSearch) {
+            const eventCards = Array.from(document.querySelectorAll('#eventsGrid .event-card'));
+            const eventSearchEmpty = document.getElementById('eventSearchEmpty');
+            eventSearch.addEventListener('input', () => {
+                const q = eventSearch.value.trim().toLowerCase();
+                let visible = 0;
+                eventCards.forEach(card => {
+                    const haystack = [card.dataset.name, card.dataset.location, card.dataset.organizer, card.dataset.description, card.dataset.free].join(' ').toLowerCase();
+                    const show = !q || haystack.includes(q);
+                    card.classList.toggle('hidden', !show);
+                    if (show) visible++;
+                });
+                if (eventSearchEmpty) eventSearchEmpty.classList.toggle('hidden', visible > 0);
+            });
+        }
+    </script>
+
+    <!-- Script for modals and auth -->
+    <script>
+        const authModal = document.getElementById('authModal');
+        const authModalContent = document.getElementById('authModalContent');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const title = document.getElementById('authModalTitle');
+        const switchToRegister = document.getElementById('switchToRegister');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const authMessage = document.getElementById('authMessage');
+
+        function openAuthModal(view) {
+            authModal.classList.remove('hidden');
+            // Trigger reflow for animation
+            void authModal.offsetWidth;
+            authModal.classList.remove('opacity-0');
+            authModalContent.classList.remove('scale-95');
+            authModalContent.classList.add('scale-100');
+            toggleModalView(view);
+            clearMessage();
+        }
+
+        function closeAuthModal() {
+            authModal.classList.add('opacity-0');
+            authModalContent.classList.remove('scale-100');
+            authModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                authModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function toggleModalView(view) {
+            clearMessage();
+            if (view === 'login') {
+                title.innerText = 'Sign In';
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                switchToRegister.classList.remove('hidden');
+                switchToLogin.classList.add('hidden');
+            } else {
+                title.innerText = 'Create Account';
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                switchToLogin.classList.remove('hidden');
+                switchToRegister.classList.add('hidden');
+            }
+        }
+
+        function clearMessage() {
+            authMessage.classList.add('hidden');
+            authMessage.innerText = '';
+            authMessage.className = 'hidden mb-6 p-4 rounded-xl text-sm font-medium font-body border';
+        }
+
+        function showMessage(msg, isError) {
+            authMessage.innerText = msg;
+            authMessage.classList.remove('hidden');
+            if (isError) {
+                authMessage.classList.add('bg-error-container', 'text-on-error-container', 'border-error/20');
+                authMessage.classList.remove('bg-surface-container-highest', 'text-on-surface');
+            } else {
+                authMessage.classList.remove('bg-error-container', 'text-on-error-container', 'border-error/20');
+                authMessage.classList.add('bg-surface-container-highest', 'text-on-surface', 'border-outline-variant/20');
+            }
+        }
+
+        async function handleAuth(event, endpoint) {
+            event.preventDefault();
+            clearMessage();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = 'Please wait...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (endpoint === '/login') {
+                        window.location.href = '/dashboard';
+                    } else {
+                        showMessage('Registration successful! You can now sign in.', false);
+                        form.reset();
+                        setTimeout(() => toggleModalView('login'), 2000);
+                    }
+                } else {
+                    showMessage(result.message || 'An error occurred. Please try again.', true);
+                }
+            } catch (err) {
+                showMessage('Network error. Please try again.', true);
+            } finally {
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Close on clicking outside
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

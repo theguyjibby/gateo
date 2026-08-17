@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawal - {{ event_data.event_name }} - Gateo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7c3aed',
+                        'primary-container': '#ede9fe',
+                        secondary: '#8b5cf6',
+                        surface: '#ffffff',
+                        'surface-container': '#f8fafc',
+                        'surface-container-low': '#f1f5f9',
+                        'surface-container-highest': '#e2e8f0',
+                        'on-surface': '#0f172a',
+                        'on-surface-variant': '#475569',
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .nav-active-pill::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(to bottom, #7c3aed, #8b5cf6);
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+
+<body class="bg-surface-container min-h-screen text-on-surface font-body flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-slate-50/80 backdrop-blur-xl flex flex-col py-8 border-r-0 shadow-[0_20px_40px_-10px_rgba(20,27,43,0.05)] z-50 -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="px-8 mb-10">
+            <h1 class="text-2xl font-bold tracking-tighter text-indigo-700 font-headline">Gateo</h1>
+            <p class="text-xs text-on-surface-variant font-medium tracking-tight">Event Management</p>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="/events">
+                <span class="material-symbols-outlined">event</span>
+                <span>Events</span>
+            </a>
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="#">
+                <span class="material-symbols-outlined">confirmation_number</span>
+                <span>Tickets</span>
+            </a>
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="#">
+                <span class="material-symbols-outlined">qr_code_scanner</span>
+                <span>Scanner</span>
+            </a>
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="/team">
+                <span class="material-symbols-outlined">groups</span>
+                <span>Team</span>
+            </a>
+            <a class="relative text-indigo-700 font-bold font-headline tracking-tight text-sm px-8 py-3 flex items-center gap-3 transition-all duration-200 active:scale-95 nav-active-pill"
+                href="/cashier">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <span>Cashier</span>
+            </a>
+            <a class="text-slate-500 flex items-center gap-3 px-8 py-3 transition-colors hover:bg-slate-200/50 font-medium font-headline tracking-tight text-sm active:scale-95 duration-200"
+                href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="px-6 mt-auto">
+            <a href="/create_event"
+                class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-lg font-headline font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all text-center block">
+                Create Event
+            </a>
+            <div class="mt-8 flex items-center gap-3 px-2">
+                <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden">
+                    <img alt="Gateo Workspace" class="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDohqIKRN3a7UO6mNleALahZLmQwGZFzWKfS1C1ouuGCKAfAIwaEeBdq4UD4F7dcGRBnkSlRUkUECzhXfzf2ZxHonqDRXelplYILJIBUy07fHG7-jBO6QKNQnxFDVMhd-JZK7Ca9NdWN6dVT4LympGon-zjEQlkG-mar3OHZdZTHF_JmXu5WoYLlewsEaDsvMte_WxC9K-22K6kUV4YKFjT9fU5lVjY7Lvtx4NkGzFNeek9SCRXVChkbApzXrBfaZOGlviHOjdy9Y8" />
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold font-headline">{{ organizer_username }}</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Top Nav -->
+    <header class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white/80 backdrop-blur-xl flex justify-between items-center px-4 lg:px-8 w-full z-40">
+        <div class="flex items-center gap-3 flex-1">
+            <button onclick="toggleSidebar()" class="lg:hidden text-slate-600 hover:text-indigo-600 p-1 active:scale-90 transition-all">
+                <span class="material-symbols-outlined text-[28px]">menu</span>
+            </button>
+            <a href="/cashier" class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-all">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+            </a>
+            <div>
+                <h2 class="text-lg font-bold font-headline text-on-surface">{{ event_data.event_name }}</h2>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Withdrawal Dashboard</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="text-slate-500 hover:text-indigo-500 transition-transform">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden cursor-pointer active:scale-95 transition-transform">
+                <img alt="User Profile" class="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnhzXANJ8BakS0Umi8LSUbv93Xe7NmkeAUtbegD2Wub5pD6z-Y_dqzPZk3FofSwHYKMuvviLQDMcCeT2q5ZwZDYZT8FWQTSgsBl_Gq76AwBRtiP3FtHJWCTMR5YtNduTKrXlj2Iyi2glg7XYHyUmfdIyS5DEe40npJx4Y38SVxyeX77clCp9hE1SeQkjQBuEKj5wO7oWTpYvmR59sqGBS2sZEtNyztrm6tsVomVvXLaatjPZZs7bzfJVA6nm8S_HIkwYpuY6-dk4g" />
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 pt-16 min-h-screen p-4 sm:p-6 lg:p-12">
+        <!-- Revenue Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-surface border border-outline-variant/20 rounded-2xl p-6 hover:shadow-lg transition-all">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                    </div>
+                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Total Revenue</p>
+                </div>
+                <p class="text-3xl font-extrabold font-headline text-on-surface">₦{{ "{:,.0f}".format(event_data.Total_Revenue) }}</p>
+            </div>
+
+            <div class="bg-surface border border-outline-variant/20 rounded-2xl p-6 hover:shadow-lg transition-all">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-red-500">remove</span>
+                    </div>
+                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Gateo Fee (5%)</p>
+                </div>
+                <p class="text-3xl font-extrabold font-headline text-red-500">₦{{ "{:,.0f}".format(event_data.Total_Revenue * 0.05) }}</p>
+            </div>
+
+            <div class="bg-surface border border-outline-variant/20 rounded-2xl p-6 hover:shadow-lg transition-all">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-emerald-600">add</span>
+                    </div>
+                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Your Revenue</p>
+                </div>
+                <p class="text-3xl font-extrabold font-headline text-emerald-600">₦{{ "{:,.0f}".format(event_data.Total_Revenue * 0.95) }}</p>
+            </div>
+        </div>
+
+        <!-- Withdrawable Amount Card -->
+        <div class="bg-surface border border-outline-variant/20 rounded-2xl p-8 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold font-headline text-on-surface">Withdrawable Amount</h3>
+                <span class="text-2xl font-extrabold font-headline text-primary">₦{{ "{:,.0f}".format(event_data.withdrawable_revenue) }}</span>
+            </div>
+
+            {% set total_organizer = event_data.Total_Revenue * 0.95 %}
+            {% set pct = (event_data.withdrawable_revenue / total_organizer * 100) if total_organizer > 0 else 0 %}
+            <div class="w-full bg-surface-container-low rounded-full h-3 overflow-hidden mb-4">
+                <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all" style="width: {{ pct }}%"></div>
+            </div>
+
+            <div class="flex items-center gap-2 text-on-surface-variant text-sm">
+                <span class="material-symbols-outlined text-base">info</span>
+                <span>
+                    {% if event_data.event_end_date %}
+                    Event ends {{ event_data.event_end_date[:10] }} — full amount available at 11:59 PM on the end date.
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Withdrawal Action -->
+        <div class="bg-surface border border-outline-variant/20 rounded-2xl p-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">account_balance</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold font-headline text-on-surface">Withdrawal Details</h3>
+                    <p class="text-sm text-on-surface-variant">Enter your bank details to receive payment</p>
+                </div>
+            </div>
+
+            <form id="withdrawForm" onsubmit="processWithdrawal(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Bank Name</label>
+                        <select id="bankName" required
+                            class="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/20 rounded-xl text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                            <option value="">Select your bank</option>
+                            <option value="access_bank">Access Bank</option>
+                            <option value="citibank_nigeria">Citibank Nigeria</option>
+                            <option value="ecobank_nigeria">Ecobank Nigeria</option>
+                            <option value="fidelity_bank">Fidelity Bank</option>
+                            <option value="first_bank_of_nigeria">First Bank of Nigeria</option>
+                            <option value="first_city_monument_bank">First City Monument Bank</option>
+                            <option value="guaranty_trust_bank">Guaranty Trust Bank</option>
+                            <option value="heritage_bank">Heritage Bank</option>
+                            <option value="keystone_bank">Keystone Bank</option>
+                            <option value="polaris_bank">Polaris Bank</option>
+                            <option value="stanbic_ibtc_bank">Stanbic IBTC Bank</option>
+                            <option value="standard_chartered_bank">Standard Chartered Bank</option>
+                            <option value="sterling_bank">Sterling Bank</option>
+                            <option value="united_bank_for_africa">United Bank for Africa</option>
+                            <option value="union_bank_of_nigeria">Union Bank of Nigeria</option>
+                            <option value="unity_bank">Unity Bank</option>
+                            <option value="wema_bank">Wema Bank</option>
+                            <option value="zenith_bank">Zenith Bank</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Account Number</label>
+                        <input type="text" id="accountNumber" required maxlength="10" pattern="[0-9]{10}"
+                            placeholder="e.g. 1234567890"
+                            class="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/20 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                        <div id="resolveMessage" class="hidden mt-2 text-xs font-medium rounded-xl py-2 px-3"></div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Amount to Withdraw</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">₦</span>
+                        <input type="number" id="withdrawAmount" required min="1" max="{{ event_data.withdrawable_revenue }}"
+                            placeholder="0"
+                            class="w-full pl-8 pr-4 py-3 bg-surface-container-low border border-outline-variant/20 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                    </div>
+                    <p class="text-xs text-on-surface-variant mt-2">Maximum: ₦{{ "{:,.0f}".format(event_data.withdrawable_revenue) }}</p>
+                </div>
+
+                <button type="submit" id="withdrawBtn"
+                    class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-lg font-headline font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-lg">send</span>
+                    Confirm Withdrawal
+                </button>
+                <div id="withdrawMessage" class="hidden mt-4 text-center text-sm font-medium rounded-xl py-3"></div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        let lastResolved = null;
+
+        async function resolveAccount() {
+            const accountNumber = document.getElementById('accountNumber').value;
+            const bankName = document.getElementById('bankName').value;
+            const msg = document.getElementById('resolveMessage');
+
+            if (!bankName || !/^[0-9]{10}$/.test(accountNumber)) {
+                msg.classList.add('hidden');
+                return;
+            }
+
+            const key = bankName + ':' + accountNumber;
+            if (lastResolved === key) {
+                return;
+            }
+
+            msg.classList.remove('hidden');
+            msg.innerText = 'Verifying account...';
+            msg.className = 'mt-2 text-xs font-medium rounded-xl py-2 px-3 bg-surface-container-low text-on-surface-variant';
+
+            try {
+                const response = await fetch('/api/resolve-bank-account/{{ event_data.event_id }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_number: accountNumber,
+                        bank_name: bankName,
+                        token: '{{ token }}'
+                    })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    lastResolved = key;
+                    msg.innerText = 'Account verified: ' + result.account_name;
+                    msg.className = 'mt-2 text-xs font-medium rounded-xl py-2 px-3 bg-emerald-50 text-emerald-600';
+                } else {
+                    lastResolved = null;
+                    msg.innerText = result.message || 'Unable to verify account';
+                    msg.className = 'mt-2 text-xs font-medium rounded-xl py-2 px-3 bg-red-50 text-red-600';
+                }
+            } catch (error) {
+                lastResolved = null;
+                msg.innerText = 'Network error. Please try again.';
+                msg.className = 'mt-2 text-xs font-medium rounded-xl py-2 px-3 bg-red-50 text-red-600';
+            }
+        }
+
+        document.getElementById('accountNumber').addEventListener('input', function () {
+            if (this.value.length === 10) resolveAccount();
+        });
+        document.getElementById('accountNumber').addEventListener('blur', resolveAccount);
+        document.getElementById('bankName').addEventListener('change', resolveAccount);
+
+        async function processWithdrawal(e) {
+            e.preventDefault();
+            const btn = document.getElementById('withdrawBtn');
+            const msg = document.getElementById('withdrawMessage');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-lg">sync</span> Processing...`;
+
+            const payload = {
+                bank_name: document.getElementById('bankName').value,
+                account_number: document.getElementById('accountNumber').value,
+                amount: document.getElementById('withdrawAmount').value,
+                token: '{{ token }}'
+            };
+
+            try {
+                const response = await fetch('/cashier/withdrawal/{{ event_data.organizers_id }}/{{ event_data.event_id }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    msg.innerText = result.message || 'Withdrawal successful!';
+                    msg.className = 'mt-4 text-center text-sm font-medium rounded-xl py-3 bg-emerald-50 text-emerald-600';
+                    document.getElementById('withdrawForm').reset();
+                } else {
+                    msg.innerText = result.message || 'Withdrawal failed.';
+                    msg.className = 'mt-4 text-center text-sm font-medium rounded-xl py-3 bg-red-50 text-red-600';
+                }
+            } catch (error) {
+                msg.innerText = 'Network error. Please try again.';
+                msg.className = 'mt-4 text-center text-sm font-medium rounded-xl py-3 bg-red-50 text-red-600';
+            } finally {
+                msg.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-lg">send</span> Confirm Withdrawal`;
+            }
+        }
+    </script>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.add('hidden');
+        }
+    </script>
+
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+</body>
+
+</html>

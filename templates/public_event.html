@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.event_name }} - Gateo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Font Awesome for Social Brands -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7c3aed',
+                        secondary: '#8b5cf6',
+                        surface: '#ffffff',
+                        'surface-container': '#f8fafc',
+                        'on-surface': '#0f172a',
+                        'on-surface-variant': '#475569',
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-surface-container min-h-screen text-on-surface font-body pb-12">
+    <!-- Navigation Bar -->
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/10 px-6 py-3 mb-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-black font-headline text-primary tracking-tighter">Gateo</a>
+            <div class="flex items-center gap-4">
+                {% if current_user.is_authenticated and current_user.id == event.organizers_id %}
+                <a href="{{ public_back_url }}"
+                    class="w-10 h-10 rounded-full bg-surface border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+                    title="Back to {{ public_back_label }}">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 md:px-0">
+        <!-- Event Hero Carousel -->
+        <div
+            class="bg-surface rounded-[1.5rem] overflow-hidden shadow-lg shadow-slate-200/50 border border-outline-variant/20 mb-6 relative group">
+
+            <!-- Hero Carousel -->
+            <div id="heroCarousel"
+                class="h-[280px] md:h-[380px] w-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth">
+                {% if event_media %}
+                {% for media in event_media %}
+                <div class="flex-shrink-0 w-full h-full snap-center relative">
+                    {% if media.filepath.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
+                    <video src="/{{ media.filepath }}" class="w-full h-full object-cover hero-video" muted loop
+                        playsinline></video>
+                    {% else %}
+                    <img src="/{{ media.filepath }}" class="w-full h-full object-cover hero-photo">
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                </div>
+                {% endfor %}
+                {% elif banner_path %}
+                <div class="flex-shrink-0 w-full h-full snap-center relative">
+                    <img src="/{{ banner_path }}" class="w-full h-full object-cover hero-photo">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                </div>
+                {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <h1
+                        class="text-3xl md:text-5xl font-black font-headline text-white tracking-tight px-8 text-center">
+                        {{ event.event_name }}</h1>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Hero Content Overlay -->
+            <div class="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
+                <h1 class="text-3xl md:text-5xl font-black font-headline leading-tight tracking-tight mb-4">{{
+                    event.event_name }}</h1>
+                <!-- Hero Control Layer -->
+                <div class="absolute bottom-4 right-4 flex items-center gap-3 pointer-events-auto">
+                    <button id="soundToggle" onclick="toggleGlobalSound(this)"
+                        class="w-10 h-10 flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full border border-white/30 text-white hover:bg-white hover:text-primary transition-all opacity-0 pointer-events-none">
+                        <span class="material-symbols-outlined text-xl">volume_off</span>
+                    </button>
+
+                    <!-- Swipe Hint Pill -->
+                    <div
+                        class="flex items-center gap-2 bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full border border-white/30 animate-bounce pointer-events-none">
+                        <span class="material-symbols-outlined text-white text-lg">east</span>
+                        <span
+                            class="text-[9px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap">Swipe
+                            to explore media</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div
+                class="absolute top-1/2 -translate-y-1/2 left-6 right-6 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="scrollHero(-1)"
+                    class="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto hover:bg-white hover:text-primary transition-all">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button onclick="scrollHero(1)"
+                    class="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white pointer-events-auto hover:bg-white hover:text-primary transition-all">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+
+        </div>
+
+        <div
+            class="p-6 md:p-8 space-y-9 bg-surface rounded-[1.5rem] border border-outline-variant/20 -mt-8 relative z-10 shadow-lg shadow-slate-200/50">
+            <!-- Details -->
+            <div class="space-y-4">
+                <div class="flex flex-row items-center justify-between gap-6">
+                    <h2
+                        class="text-xs font-black font-headline text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">info</span> About this Event
+                    </h2>
+
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="flex items-center gap-1 bg-surface-container border border-outline-variant/30 p-1.5 rounded-xl overflow-x-auto no-scrollbar max-w-full">
+                            {% if event.website %}<a href="{{ event.website }}" target="_blank"
+                                class="h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-primary transition-all flex-shrink-0"
+                                title="Official Website">
+                                <span class="material-symbols-outlined text-lg">language</span>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden md:inline">Website</span>
+                            </a>{% endif %}
+
+                            {% if event.contact_number %}<button
+                                onclick="copyToClipboard('{{ event.contact_number }}', this)"
+                                class="group h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-primary transition-all cursor-pointer flex-shrink-0"
+                                title="Click to Copy Number">
+                                <span class="material-symbols-outlined text-lg">call</span>
+                                <div
+                                    class="flex items-center text-[11px] font-black uppercase tracking-[0.15em] hidden md:flex">
+                                    <span
+                                        class="max-w-0 overflow-hidden group-hover:max-w-[60px] transition-all duration-300 whitespace-nowrap opacity-0 group-hover:opacity-100 mr-0 group-hover:mr-1.5">Phone:</span>
+                                    <span class="copy-target">{{ event.contact_number }}</span>
+                                </div>
+                            </button>{% endif %}
+
+                            {% if event.public_email_contact %}<a href="mailto:{{ event.public_email_contact }}"
+                                class="group h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-primary transition-all flex-shrink-0"
+                                title="Email Us">
+                                <span class="material-symbols-outlined text-lg">mail</span>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden md:inline">Email</span>
+                            </a>{% endif %}
+
+                            {% if (event.website or event.contact_number or event.public_email_contact) and (event.facebook_link or event.twitter_link
+                            or event.instagram_link or event.tiktok_link) %}
+                            <div class="w-px h-5 bg-outline-variant/30 mx-1.5 flex-shrink-0"></div>
+                            {% endif %}
+
+                            {% if event.facebook_link %}<a href="{{ event.facebook_link }}" target="_blank"
+                                class="h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-[#1877F2] transition-all flex-shrink-0">
+                                <i class="fa-brands fa-facebook-f text-sm"></i>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden lg:inline">Facebook</span>
+                            </a>{% endif %}
+
+                            {% if event.twitter_link %}<a href="{{ event.twitter_link }}" target="_blank"
+                                class="h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-on-surface transition-all flex-shrink-0">
+                                <i class="fa-brands fa-x-twitter text-sm"></i>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden lg:inline">X</span>
+                            </a>{% endif %}
+
+                            {% if event.instagram_link %}<a href="{{ event.instagram_link }}" target="_blank"
+                                class="h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-[#E4405F] transition-all flex-shrink-0">
+                                <i class="fa-brands fa-instagram text-sm"></i>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden lg:inline">Instagram</span>
+                            </a>{% endif %}
+
+                            {% if event.tiktok_link %}<a href="{{ event.tiktok_link }}" target="_blank"
+                                class="h-9 px-3 flex items-center gap-2 rounded-lg hover:bg-primary/5 text-on-surface-variant hover:text-on-surface transition-all flex-shrink-0">
+                                <i class="fa-brands fa-tiktok text-sm"></i>
+                                <span
+                                    class="text-[11px] font-black uppercase tracking-[0.15em] hidden lg:inline">TikTok</span>
+                            </a>{% endif %}
+                        </div>
+                        <button onclick="copyEventLink(this)"
+                            class="bg-on-surface text-surface px-4 py-2.5 rounded-xl font-black font-headline text-[9px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary transition-all shadow-lg shadow-slate-200">
+                            <span class="material-symbols-outlined text-base">link</span>
+                            <span class="button-text">Copy Link</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="max-w-4xl">
+                    <p class="text-base text-on-surface-variant leading-relaxed font-medium">{{
+                        event.event_description or 'No description provided.' }}</p>
+                </div>
+
+                {% if organizer_name %}
+                <p class="text-sm text-on-surface-variant/70 font-medium">Organized by <span class="text-on-surface font-bold">{{ organizer_name }}</span></p>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-outline-variant/10 pt-6">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-2xl">calendar_today</span>
+                        </div>
+                        <div>
+                            <p
+                                class="text-xs font-black font-headline text-on-surface-variant uppercase tracking-[0.2em] mb-2">
+                                Date & Time</p>
+                            <p class="text-xl font-bold font-headline">{{ event.event_date.strftime('%d %b %Y') if
+                                event.event_date else 'TBA' }}</p>
+                            <p class="text-base text-on-surface-variant mt-1">{{ event.event_time.strftime('%I:%M %p') if
+                                event.event_time else '' }}</p>
+                            {% if event.event_end_date and event.event_end_date.strftime('%H:%M:%S') != '23:59:59' %}
+                            <p class="text-sm text-on-surface-variant mt-1">Ends {{ event.event_end_date.strftime('%I:%M %p') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-2xl">location_on</span>
+                        </div>
+                        <div>
+                            <p
+                                class="text-xs font-black font-headline text-on-surface-variant uppercase tracking-[0.2em] mb-2">
+                                Location</p>
+                            <p class="text-xl font-bold font-headline">{{ event.event_location or 'Online' }}</p>
+                            <p class="text-base text-on-surface-variant mt-1">{{ event.event_country }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horizontal Tickets Section -->
+            <div class="space-y-7">
+                <h2 class="text-2xl font-black font-headline flex items-center gap-3 text-on-surface">
+                    <span class="material-symbols-outlined text-primary text-3xl">confirmation_number</span>
+                    Available Tickets
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for ticket in ticket_details %}
+                    {% set rank = loop.index0 %}
+                    <div
+                        class="bg-white border {% if rank == 0 %}border-[#B8860B] hover:shadow-[#B8860B]/15 shadow-xl shadow-[#B8860B]/5{% elif rank == 1 %}border-purple-300 hover:shadow-purple-300/20{% elif rank == 2 %}border-blue-300 hover:shadow-blue-300/20{% else %}border-slate-100 hover:shadow-slate-200/50{% endif %} rounded-[1.5rem] p-6 flex flex-col justify-between h-full hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+
+                        {% if rank == 0 %}
+                        <!-- Royal Gold Accent -->
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-[#B8860B]/5 blur-[60px] -mr-16 -mt-16 pointer-events-none">
+                        </div>
+                        {% endif %}
+
+                        <div class="space-y-4 relative">
+                            <div class="flex justify-between items-start">
+                                <div class="space-y-2">
+                                    <h3 class="text-xl font-bold font-headline text-on-surface tracking-tight">{{
+                                        ticket.ticket_type }}</h3>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-black font-headline text-on-surface tracking-tighter">
+                                        {% if ticket.ticket_price <= 0 %}Free{% else %}₦{{ "{:,.0f}".format(ticket.ticket_price) }}{% endif %}
+                                    </p>
+                                    <p
+                                        class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest mt-1">
+                                        Per Person</p>
+                                </div>
+                            </div>
+                            <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">{{
+                                ticket.ticket_description or
+                                'Full access pass to the event with all standard amenities included.' }}</p>
+                        </div>
+
+                        <div class="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between relative">
+                            <div class="flex items-center gap-2 text-on-surface-variant/50">
+                                <span
+                                    class="material-symbols-outlined text-xl {% if rank == 0 %}text-[#B8860B]{% elif rank == 1 %}text-purple-400{% elif rank == 2 %}text-blue-400{% endif %}">verified</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest">Verified Pass</span>
+                            </div>
+
+                            {% if event.is_suspended or not ticket.is_active or ticket.is_sold_out
+                            or ticket.is_expired %}
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="material-symbols-outlined text-lg">block</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Unavailable</span>
+                            </div>
+                            {% else %}
+                            <button
+                                onclick="openPurchaseModal('{{ ticket.ticket_type }}', '{{ ticket.ticket_price }}', '{{ rank }}')"
+                                class="px-5 py-2.5 {% if rank == 0 %}bg-[#B8860B] text-white hover:bg-[#8B6D31] shadow-lg shadow-[#B8860B]/20{% elif rank == 1 %}bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20{% elif rank == 2 %}bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20{% else %}bg-on-surface text-surface hover:bg-primary{% endif %} rounded-xl text-[10px] font-black font-headline uppercase tracking-widest transition-all active:scale-95">
+                                Get Ticket
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div
+                        class="col-span-full text-center py-12 bg-white rounded-[2rem] border border-dashed border-slate-200">
+                        <span class="material-symbols-outlined text-4xl text-slate-200 mb-4">confirmation_number</span>
+                        <p class="text-on-surface-variant text-base font-medium italic">No tickets available at the
+                            moment.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Connect Section Card -->
+        <div
+            class="bg-surface p-6 md:p-10 rounded-[2rem] border border-outline-variant/20 shadow-xl shadow-slate-200/50 space-y-8">
+            <div class="text-center space-y-4">
+                <h2 class="text-2xl md:text-4xl font-black font-headline tracking-tight">Connect with us</h2>
+                <p class="text-on-surface-variant text-base max-w-2xl mx-auto">Have questions about the event? Reach out
+                    to the team or follow us for updates.</p>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
+                <!-- Contact Card: Call -->
+                {% if event.contact_number %}
+                <a href="tel:{{ event.contact_number }}"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-xl md:text-2xl">call</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Phone
+                        </p>
+                        <p
+                            class="text-sm md:text-lg font-bold font-headline truncate w-full max-w-[120px] md:max-w-none">
+                            {{ event.contact_number }}</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Contact Card: Email -->
+                {% if event.public_email_contact %}
+                <a href="mailto:{{ event.public_email_contact }}"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-xl md:text-2xl">mail</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Email
+                        </p>
+                        <p
+                            class="text-sm md:text-lg font-bold font-headline truncate w-full max-w-[120px] md:max-w-none">
+                            {{ event.public_email_contact }}</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Contact Card: Website -->
+                {% if event.website %}
+                <a href="{{ event.website }}" target="_blank"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-xl md:text-2xl">language</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Website
+                        </p>
+                        <p class="text-sm md:text-lg font-bold font-headline">Visit Site</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Social Card: Instagram -->
+                {% if event.instagram_link %}
+                <a href="{{ event.instagram_link }}" target="_blank"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-[#E4405F]/50 hover:shadow-xl hover:shadow-[#E4405F]/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#E4405F]/5 text-[#E4405F] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-instagram text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">
+                            Instagram</p>
+                        <p class="text-sm md:text-lg font-bold font-headline">Follow</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Social Card: X/Twitter -->
+                {% if event.twitter_link %}
+                <a href="{{ event.twitter_link }}" target="_blank"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-on-surface/50 hover:shadow-xl hover:shadow-on-surface/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-on-surface/5 text-on-surface flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-x-twitter text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">X /
+                            Twitter</p>
+                        <p class="text-sm md:text-lg font-bold font-headline">Join</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Social Card: Facebook -->
+                {% if event.facebook_link %}
+                <a href="{{ event.facebook_link }}" target="_blank"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-[#1877F2]/50 hover:shadow-xl hover:shadow-[#1877F2]/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1877F2]/5 text-[#1877F2] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-facebook-f text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Facebook
+                        </p>
+                        <p class="text-sm md:text-lg font-bold font-headline">Connect</p>
+                    </div>
+                </a>
+                {% endif %}
+
+                <!-- Social Card: TikTok -->
+                {% if event.tiktok_link %}
+                <a href="{{ event.tiktok_link }}" target="_blank"
+                    class="group p-6 md:p-8 bg-surface-container border border-outline-variant/20 rounded-[2.5rem] hover:border-on-surface/50 hover:shadow-xl hover:shadow-on-surface/5 transition-all flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-on-surface/5 text-on-surface flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-tiktok text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-on-surface-variant mb-1">TikTok
+                        </p>
+                        <p class="text-sm md:text-lg font-bold font-headline">Watch</p>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-12">
+        <p class="text-[10px] font-black font-headline text-on-surface-variant/40 uppercase tracking-[0.3em]">Gateo
+            Events &copy; 2026</p>
+    </div>
+    </div>
+    <!-- Purchase Modal -->
+    <div id="purchaseModal"
+        class="fixed inset-0 bg-slate-900/5 backdrop-blur-sm z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="bg-surface w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden transform scale-95 transition-all duration-300">
+            <div id="modalHeader"
+                class="bg-gradient-to-br from-primary to-secondary p-8 text-white relative transition-all duration-500">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white">shopping_cart</span>
+                    </div>
+                    <h3 class="text-2xl font-extrabold font-headline">Checkout</h3>
+                </div>
+                <p id="modalTicketTitle" class="text-white/80 text-sm font-medium ml-13">Choose your ticket tier</p>
+                <button onclick="closePurchaseModal()"
+                    class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="purchaseForm" class="p-8 space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Ticket
+                        Type</label>
+                    <select name="ticket_type" id="selectedTicketType" required onchange="updateModalPrice(this)"
+                        class="w-full px-4 py-3.5 bg-surface-container border border-outline-variant/30 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all text-sm font-bold appearance-none">
+                        {% for ticket in ticket_details %}
+                        <option value="{{ ticket.ticket_type }}" data-id="{{ ticket.ticket_type_id }}" data-price="{{ ticket.ticket_price }}"
+                            data-rank="{{ loop.index0 }}" data-available="{{ ticket.available_quantity }}" {% if not ticket.is_active or
+                            ticket.is_sold_out or ticket.is_expired %}disabled class="opacity-50 italic" {% endif %}>
+                            {{ ticket.ticket_type }} - {% if ticket.ticket_price <= 0 %}Free{% else %}₦{{ "{:,.2f}".format(ticket.ticket_price) }}{% endif %}
+                            {% if not ticket.is_active %}(Unavailable){% elif ticket.is_sold_out %}(Sold Out){% elif
+                            ticket.is_expired %}(Expired){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Name</label>
+                    <input type="text" name="ticket_name" required placeholder="John Doe"
+                        class="w-full px-4 py-3.5 bg-surface-container border border-outline-variant/30 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all text-sm font-medium">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Email
+                        Address</label>
+                    <input type="email" name="user_email" required placeholder="john@example.com"
+                        class="w-full px-4 py-3.5 bg-surface-container border border-outline-variant/30 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all text-sm font-medium">
+                </div>
+
+                <!-- Quantity Field -->
+                <div class="space-y-2">
+                    <label
+                        class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Quantity</label>
+                    <div
+                        class="flex items-center bg-surface-container border border-outline-variant/30 rounded-2xl p-1">
+                        <button type="button" onclick="changeQuantity(-1)"
+                            class="w-12 h-12 flex items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90">
+                            <span class="material-symbols-outlined text-xl">remove</span>
+                        </button>
+                        <input type="number" name="quantity" id="ticketQuantity" value="1" min="1" readonly
+                            class="flex-1 bg-transparent text-center font-bold text-base outline-none border-none pointer-events-none text-on-surface">
+                        <button type="button" onclick="changeQuantity(1)"
+                            class="w-12 h-12 flex items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90">
+                            <span class="material-symbols-outlined text-xl">add</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="checkoutMessage" class="hidden text-center py-3 px-4 rounded-2xl text-xs font-bold"></div>
+
+                <button type="submit" id="purchaseSubmitBtn"
+                    class="w-full py-4 bg-on-surface text-surface rounded-2xl font-bold font-headline shadow-xl hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-2 mt-4">
+                    <span class="material-symbols-outlined text-[20px]">payments</span>
+                    Pay & Get Ticket
+                </button>
+            </form>
+
+            <!-- Success State (Hidden by default) -->
+            <div id="successState" class="hidden p-12 flex flex-col items-center text-center animate-fade-in">
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+                <h3 class="text-2xl font-extrabold font-headline text-on-surface mb-2">Success!</h3>
+                <p class="text-on-surface-variant text-sm mb-8">Your ticket has been generated and sent to your email.
+                </p>
+                <button onclick="closePurchaseModal()"
+                    class="w-full py-4 bg-surface-container-highest text-on-surface rounded-2xl font-bold font-headline hover:bg-surface-container-high transition-all">
+                    Return to Event
+                </button>
+            </div>
+
+            <!-- Verifying State (Hidden by default) -->
+            <div id="verifyingState" class="hidden p-12 flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-4xl animate-spin">progress_activity</span>
+                </div>
+                <h3 class="text-2xl font-extrabold font-headline text-on-surface mb-2">Verifying Payment</h3>
+                <p class="text-on-surface-variant text-sm mb-4">Please wait while we confirm your transaction with Paystack.</p>
+                <div class="w-full bg-outline-variant/30 rounded-full h-1.5 overflow-hidden">
+                    <div id="verifyProgressBar" class="h-full bg-primary rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="verifyStatusText" class="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest mt-3">Checking&hellip;</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PAYSTACK_PUBLIC_KEY = "{{ paystack_test_public_key }}";
+        const eventId = {{ event.event_id }};
+        const purchaseModal = document.getElementById('purchaseModal');
+        const purchaseModalContent = purchaseModal.querySelector('div');
+        const purchaseForm = document.getElementById('purchaseForm');
+        const successState = document.getElementById('successState');
+        const checkoutMessage = document.getElementById('checkoutMessage');
+        const purchaseSubmitBtn = document.getElementById('purchaseSubmitBtn');
+        const modalTicketTitle = document.getElementById('modalTicketTitle');
+        const selectedTicketTypeInput = document.getElementById('selectedTicketType');
+        const modalHeader = document.getElementById('modalHeader');
+        const ticketQuantityInput = document.getElementById('ticketQuantity');
+        const plusBtn = document.querySelector('button[onclick="changeQuantity(1)"]');
+        const minusBtn = document.querySelector('button[onclick="changeQuantity(-1)"]');
+
+        const tierStyles = {
+            '0': {
+                bg: 'from-[#B8860B] via-[#C5A059] to-[#8B6D31]',
+                text: 'text-white',
+                subtext: 'text-white/70',
+                btn: 'bg-[#B8860B]',
+                btnHover: 'hover:bg-[#8B6D31]'
+            },
+            '1': {
+                bg: 'from-purple-700 via-purple-500 to-purple-800',
+                text: 'text-white',
+                subtext: 'text-white/80',
+                btn: 'bg-purple-600',
+                btnHover: 'hover:bg-purple-700'
+            },
+            '2': {
+                bg: 'from-blue-700 via-blue-500 to-blue-800',
+                text: 'text-white',
+                subtext: 'text-white/80',
+                btn: 'bg-blue-600',
+                btnHover: 'hover:bg-blue-700'
+            },
+            'default': {
+                bg: 'from-slate-800 via-slate-600 to-slate-900',
+                text: 'text-white',
+                subtext: 'text-white/80',
+                btn: 'bg-on-surface',
+                btnHover: 'hover:bg-primary'
+            }
+        };
+
+        function updateModalPrice(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const type = selectedOption.value;
+            const rank = selectedOption.getAttribute('data-rank');
+            const available = parseInt(selectedOption.getAttribute('data-available')) || 0;
+
+            let quantity = parseInt(ticketQuantityInput.value) || 1;
+
+            // Adjust quantity if it exceeds availability
+            if (quantity > available) {
+                quantity = available;
+                ticketQuantityInput.value = quantity;
+            }
+            if (quantity < 1 && available > 0) {
+                quantity = 1;
+                ticketQuantityInput.value = quantity;
+            }
+
+            // Update button states
+            plusBtn.disabled = quantity >= available;
+            plusBtn.classList.toggle('opacity-20', quantity >= available);
+            plusBtn.classList.toggle('cursor-not-allowed', quantity >= available);
+
+            minusBtn.disabled = quantity <= 1;
+            minusBtn.classList.toggle('opacity-20', quantity <= 1);
+            minusBtn.classList.toggle('cursor-not-allowed', quantity <= 1);
+
+            const GATEOS_PURCHASE_LEVY = 100;
+            const subtotal = price * quantity;
+            const total = subtotal > 0 ? subtotal + GATEOS_PURCHASE_LEVY : 0;
+            const totalText = total <= 0 ? 'Free' : `₦${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            modalTicketTitle.innerText = `${type} • ${totalText}`;
+
+            if (quantity > 1) {
+                modalTicketTitle.innerHTML = `${type} <span class="mx-1 opacity-50">×</span> ${quantity} <span class="mx-1">•</span> ${totalText}`;
+            }
+
+            // Apply Tier Styling
+            const style = tierStyles[rank] || tierStyles['default'];
+
+            // Update Header
+            modalHeader.className = `p-8 relative transition-all duration-500 bg-gradient-to-br ${style.bg} ${style.text}`;
+
+            // Update Modal Subtitle and Close button color
+            const modalSubtitle = document.getElementById('modalTicketTitle');
+            const closeBtn = modalHeader.querySelector('button');
+            const cartIcon = modalHeader.querySelector('.material-symbols-outlined');
+            const checkoutHeading = modalHeader.querySelector('h3');
+
+            modalSubtitle.className = `${style.subtext} text-sm font-medium ml-13 transition-colors`;
+            closeBtn.className = `absolute top-6 right-6 ${style.text} opacity-50 hover:opacity-100 transition-all`;
+            cartIcon.className = `material-symbols-outlined ${style.text}`;
+            checkoutHeading.className = `text-2xl font-extrabold font-headline ${style.text}`;
+
+            // Update Button
+            if (total <= 0) {
+                purchaseSubmitBtn.innerHTML = `<span class="material-symbols-outlined text-[20px]">check_circle</span> Get Free Ticket`;
+            } else {
+                purchaseSubmitBtn.innerHTML = `<span class="material-symbols-outlined text-[20px]">payments</span> Pay & Get Ticket`;
+            }
+            purchaseSubmitBtn.className = `w-full py-4 ${style.btn} ${style.btnHover} text-surface rounded-2xl font-bold font-headline shadow-xl hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-2 mt-4`;
+        }
+
+        function changeQuantity(delta) {
+            const selectedOption = selectedTicketTypeInput.options[selectedTicketTypeInput.selectedIndex];
+            const available = parseInt(selectedOption.getAttribute('data-available')) || 0;
+
+            let current = parseInt(ticketQuantityInput.value) || 1;
+            let next = current + delta;
+
+            if (next < 1) next = 1;
+            if (next > available) next = available;
+
+            ticketQuantityInput.value = next;
+            updateModalPrice(selectedTicketTypeInput);
+
+            // Haptic-like feedback for buttons
+            const btn = event.currentTarget;
+            if (!btn.disabled) {
+                btn.classList.add('scale-110', 'text-primary');
+                setTimeout(() => btn.classList.remove('scale-110', 'text-primary'), 100);
+            }
+        }
+
+        function openPurchaseModal(type, price, rank) {
+            ticketQuantityInput.value = 1; // Reset quantity
+            selectedTicketTypeInput.value = type;
+            updateModalPrice(selectedTicketTypeInput);
+
+            purchaseForm.classList.remove('hidden');
+            successState.classList.add('hidden');
+            checkoutMessage.classList.add('hidden');
+
+            purchaseModal.classList.remove('hidden');
+            setTimeout(() => {
+                purchaseModal.classList.remove('opacity-0');
+                purchaseModalContent.classList.remove('scale-95');
+                purchaseModalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closePurchaseModal() {
+            purchaseModal.classList.add('opacity-0');
+            purchaseModalContent.classList.remove('scale-100');
+            purchaseModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                purchaseModal.classList.add('hidden');
+                purchaseForm.reset();
+            }, 300);
+        }
+
+        purchaseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Show loading state
+            purchaseSubmitBtn.disabled = true;
+            purchaseSubmitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Processing...`;
+            checkoutMessage.classList.add('hidden');
+
+            const selectedOption = selectedTicketTypeInput.options[selectedTicketTypeInput.selectedIndex];
+            const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const quantity = parseInt(ticketQuantityInput.value) || 1;
+            const name = purchaseForm.elements['ticket_name'].value;
+            const email = purchaseForm.elements['user_email'].value;
+            const ticketType = selectedOption.value;
+
+            // Generate a random reference locally for the Paystack transaction
+            const reference = 'pay_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+            try {
+                const response = await fetch(`/api/initialize_ticket_purchase/${eventId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reference: reference,
+                        user_email: email,
+                        user_name: name,
+                        ticket_type: ticketType,
+                        quantity: quantity
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    if (result.requires_payment) {
+                        if (result.authorization_url) {
+                            checkoutMessage.innerText = 'Redirecting to Paystack...';
+                            checkoutMessage.className = 'text-center py-3 px-4 rounded-2xl text-xs font-bold bg-green-50 text-green-600';
+                            checkoutMessage.classList.remove('hidden');
+                            window.location.href = result.authorization_url;
+                        } else {
+                            checkoutMessage.innerText = 'Payment could not be started. Please try again.';
+                            checkoutMessage.className = 'text-center py-3 px-4 rounded-2xl text-xs font-bold bg-red-50 text-red-600';
+                            checkoutMessage.classList.remove('hidden');
+                        }
+                    } else {
+                        purchaseForm.classList.add('hidden');
+                        successState.classList.remove('hidden');
+                    }
+                } else {
+                    checkoutMessage.innerText = result.message || 'Checkout failed.';
+                    checkoutMessage.className = 'text-center py-3 px-4 rounded-2xl text-xs font-bold bg-red-50 text-red-600';
+                    checkoutMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                checkoutMessage.innerText = 'Network error occurred. Please try again.';
+                checkoutMessage.className = 'text-center py-3 px-4 rounded-2xl text-xs font-bold bg-red-50 text-red-600';
+                checkoutMessage.classList.remove('hidden');
+            } finally {
+                purchaseSubmitBtn.disabled = false;
+                updateModalPrice(selectedTicketTypeInput);
+            }
+        });
+
+        // Hero Carousel Logic
+        const heroCarousel = document.getElementById('heroCarousel');
+        function scrollHero(direction) {
+            const scrollAmount = heroCarousel.offsetWidth;
+            heroCarousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
+
+        // Auto-play videos on swipe (Instagram style)
+        const observerOptions = {
+            root: heroCarousel,
+            threshold: 0.6
+        };
+
+        // Global Sound State
+        let isGlobalUnmuted = false;
+
+        function toggleGlobalSound(button) {
+            isGlobalUnmuted = !isGlobalUnmuted;
+            const icon = button.querySelector('.material-symbols-outlined');
+            icon.innerText = isGlobalUnmuted ? 'volume_up' : 'volume_off';
+
+            // Apply to all videos immediately
+            document.querySelectorAll('.hero-video').forEach(video => {
+                video.muted = !isGlobalUnmuted;
+            });
+        }
+
+        const soundToggle = document.getElementById('soundToggle');
+
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    // Show sound toggle when video is in view
+                    soundToggle.classList.remove('opacity-0', 'pointer-events-none');
+                    soundToggle.classList.add('opacity-100', 'pointer-events-auto');
+
+                    video.muted = !isGlobalUnmuted;
+                    video.play().catch(err => console.log("Autoplay blocked"));
+                } else {
+                    video.pause();
+                }
+            });
+        }, observerOptions);
+
+        // Observer for photos to hide the sound toggle
+        const photoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Hide sound toggle when photo is in view
+                    soundToggle.classList.add('opacity-0', 'pointer-events-none');
+                    soundToggle.classList.remove('opacity-100', 'pointer-events-auto');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.hero-video').forEach(video => {
+            videoObserver.observe(video);
+        });
+
+        document.querySelectorAll('.hero-photo').forEach(photo => {
+            photoObserver.observe(photo);
+        });
+
+        function copyEventLink(button) {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                const icon = button.querySelector('.material-symbols-outlined');
+                const textSpan = button.querySelector('.button-text');
+                const originalIcon = icon.innerText;
+                const originalText = textSpan.innerText;
+
+                // Subtle Visual feedback
+                icon.innerText = 'check';
+                textSpan.innerText = 'Copied!';
+                button.classList.add('bg-green-600');
+                button.classList.remove('bg-on-surface');
+
+                setTimeout(() => {
+                    icon.innerText = originalIcon;
+                    textSpan.innerText = originalText;
+                    button.classList.remove('bg-green-600');
+                    button.classList.add('bg-on-surface');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = button.querySelector('.material-symbols-outlined');
+                const originalIcon = icon.innerText;
+                const copyTarget = button.querySelector('.copy-target');
+                const originalText = copyTarget.innerText;
+
+                icon.innerText = 'check';
+                copyTarget.innerText = 'Copied!';
+                button.classList.add('text-green-600');
+
+                setTimeout(() => {
+                    icon.innerText = originalIcon;
+                    copyTarget.innerText = originalText;
+                    button.classList.remove('text-green-600');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // --- Inline payment verification on redirect ---
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const ref = params.get('reference');
+            const payment = params.get('payment');
+            if (payment === 'success' && ref) {
+                // Clean the URL
+                window.history.replaceState({}, '', window.location.pathname);
+
+                // Open modal in verifying state
+                purchaseForm.classList.add('hidden');
+                successState.classList.add('hidden');
+                document.getElementById('verifyingState').classList.remove('hidden');
+                checkoutMessage.classList.add('hidden');
+                purchaseModal.classList.remove('hidden');
+                setTimeout(() => {
+                    purchaseModal.classList.remove('opacity-0');
+                    purchaseModalContent.classList.remove('scale-95');
+                    purchaseModalContent.classList.add('scale-100');
+                }, 10);
+
+                let attempts = 0;
+                const maxAttempts = 60;
+                const interval = 2000;
+
+                function poll() {
+                    attempts++;
+                    const pct = Math.min((attempts / maxAttempts) * 100, 95);
+                    document.getElementById('verifyProgressBar').style.width = pct + '%';
+
+                    fetch(`/api/payment_status/${ref}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'confirmed') {
+                                document.getElementById('verifyProgressBar').style.width = '100%';
+                                document.getElementById('verifyStatusText').innerText = 'Payment confirmed!';
+                                setTimeout(() => {
+                                    document.getElementById('verifyingState').classList.add('hidden');
+                                    purchaseForm.classList.add('hidden');
+                                    successState.classList.remove('hidden');
+                                }, 600);
+                                return;
+                            }
+                            if (attempts < maxAttempts) {
+                                setTimeout(poll, interval);
+                            } else {
+                                document.getElementById('verifyStatusText').innerText = 'Taking longer than expected. Please check your email for confirmation.';
+                                document.getElementById('verifyProgressBar').style.width = '100%';
+                                document.getElementById('verifyProgressBar').classList.remove('bg-primary');
+                                document.getElementById('verifyProgressBar').classList.add('bg-amber-400');
+                            }
+                        })
+                        .catch(() => {
+                            if (attempts < maxAttempts) setTimeout(poll, interval);
+                        });
+                }
+
+                setTimeout(poll, 1500);
+            }
+        })();
+    </script>
+</body>
+
+</html>
