@@ -93,6 +93,23 @@ def run():
             ))
             print(f"Backfilled {media_table}.media_type for {res.rowcount} video(s)")
 
+    # 5. Ensure events has the cancelled_at column (cancelled-event retention)
+    events_table = app_module.Events.__tablename__
+    if events_table in inspect(engine).get_table_names():
+        events_cols = [c['name'] for c in inspect(engine).get_columns(events_table)]
+        if 'cancelled_at' not in events_cols:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {events_table} ADD COLUMN cancelled_at TIMESTAMP"
+                ))
+            print(f"Added {events_table}.cancelled_at column")
+        with engine.begin() as conn:
+            res = conn.execute(text(
+                f"UPDATE {events_table} SET cancelled_at = event_creation_date "
+                "WHERE is_cancelled = 1 AND cancelled_at IS NULL"
+            ))
+            print(f"Backfilled {res.rowcount} cancelled_at value(s)")
+
     print("Migration complete.")
 
 

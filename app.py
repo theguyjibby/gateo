@@ -181,6 +181,7 @@ class Events(db.Model):
     is_public = db.Column(db.Boolean, default=True)
     is_suspended = db.Column(db.Boolean, default=False)
     is_cancelled = db.Column(db.Boolean, default=False)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
     Team_Member = db.relationship('TeamMember', backref='event', cascade='all, delete-orphan')
     date_or_location_changed = db.Column(db.Boolean, default=False)
     date_location_changed_at = db.Column(db.DateTime, nullable=True)
@@ -1002,6 +1003,29 @@ def delete_event_media(event_id):
                     pass
 
 
+CANCELLED_EVENT_RETENTION_DAYS = 30
+
+
+def purge_expired_cancelled_events():
+    """Hard-delete cancelled events older than the retention window.
+
+    Returns the number of events permanently removed.
+    """
+    cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=CANCELLED_EVENT_RETENTION_DAYS)
+    expired = Events.query.filter(
+        Events.is_cancelled == True,  # noqa: E712
+        Events.cancelled_at.isnot(None),
+        Events.cancelled_at < cutoff
+    ).all()
+    if not expired:
+        return 0
+    for event in expired:
+        delete_event_media(event.event_id)
+        db.session.delete(event)
+    db.session.commit()
+    return len(expired)
+
+
 @app.route('/create_event/delete/<int:event_id>', methods=['DELETE'])
 @login_required
 def delete_event(event_id):
@@ -1051,10 +1075,10 @@ def delete_event(event_id):
 
         return jsonify({'message': f'Event cancelled. Refunds of ₦{refund_total:,.2f} have been initiated for all buyers.'}), 200
 
-    db.session.delete(event)
-    delete_event_media(event.event_id)
+    event.is_cancelled = True
+    event.cancelled_at = datetime.datetime.utcnow()
     db.session.commit()
-    return jsonify({'message': 'Event deleted successfully'}), 200
+    return jsonify({'message': 'Event cancelled. It has been moved to your cancelled events and will be permanently removed after 30 days.'}), 200
 
 
 @app.route('/cashier/cancel', methods=['GET'])
@@ -1182,25 +1206,23 @@ def cancel_event_confirmed():
 
         return jsonify({'message': f'Event cancelled. Refunds of ₦{refund_total:,.2f} have been initiated for all buyers.'}), 200
 
-    db.session.delete(event)
-    delete_event_media(event.event_id)
+    event.is_cancelled = True
+    event.cancelled_at = datetime.datetime.utcnow()
     db.session.commit()
-    return jsonify({'message': 'Event deleted successfully'}), 200
+    return jsonify({'message': 'Event cancelled. It has been moved to your cancelled events and will be permanently removed after 30 days.'}), 200
 
 
 @app.route('/event/organizer', methods=['GET'])
 @login_required
 def get_organizer_events():
     organizer_id = current_user.id
-    # Using order_by to get newest first
-    events = db.session.query(Events).filter_by(organizers_id=organizer_id, is_cancelled=False).order_by(Events.event_creation_date.desc()).all()
-    
-    events_data = []
-    for event in events:
+    purge_expired_cancelled_events()
+
+    def serialize(event):
         media = db.session.query(Event_Media).filter_by(event_id=event.event_id).first()
         sold_count = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True).count()
         has_withdrawal = db.session.query(Withdrawals).filter_by(event_id=event.event_id).first() is not None
-        events_data.append({
+        return {
             'event_id': event.event_id,
             'event_name': event.event_name,
             'event_date': event.event_date.strftime('%Y-%m-%d') if event.event_date else None,
@@ -1215,10 +1237,18 @@ def get_organizer_events():
             'is_suspended': getattr(event, 'is_suspended', False),
             'is_public': getattr(event, 'is_public', True),
             'is_cancelled': getattr(event, 'is_cancelled', False),
+            'cancelled_at': event.cancelled_at.isoformat() if event.cancelled_at else None,
             'has_sold_tickets': sold_count > 0,
             'has_withdrawal': has_withdrawal
-        })
-    return jsonify({'events': events_data}), 200
+        }
+
+    active = db.session.query(Events).filter_by(organizers_id=organizer_id, is_cancelled=False).order_by(Events.event_creation_date.desc()).all()
+    cancelled = db.session.query(Events).filter_by(organizers_id=organizer_id, is_cancelled=True).order_by(Events.cancelled_at.desc()).all()
+
+    return jsonify({
+        'events': [serialize(e) for e in active],
+        'cancelled_events': [serialize(e) for e in cancelled]
+    }), 200
 
 
 
