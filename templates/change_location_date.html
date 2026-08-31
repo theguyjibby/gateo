@@ -4,33 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Change Date/Location - Gateo</title>
+    <title>Change Date / Location - {{ event.event_name }} - Gateo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         primary: '#7c3aed',
-                        'primary-container': '#4c1d95',
-                        'on-primary': '#ffffff',
+                        'primary-container': '#ede9fe',
                         secondary: '#8b5cf6',
                         surface: '#ffffff',
-                        'surface-variant': '#f3f4f6',
                         'surface-container': '#f8fafc',
-                        'surface-container-highest': '#cbd5e1',
+                        'surface-container-low': '#f1f5f9',
+                        'surface-container-highest': '#e2e8f0',
                         'on-surface': '#0f172a',
                         'on-surface-variant': '#475569',
-                        outline: '#94a3b8',
-                        'outline-variant': '#cbd5e1',
-                        error: '#ef4444',
-                        'error-container': '#fef2f2',
-                        'on-error-container': '#991b1b'
                     },
                     fontFamily: {
                         headline: ['Manrope', 'sans-serif'],
@@ -42,104 +33,162 @@
     </script>
 </head>
 
-<body class="bg-surface-container min-h-screen text-on-surface font-body p-6">
-    <div class="max-w-4xl mx-auto mt-8">
-        <!-- Header -->
-        <div class="mb-8 flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-extrabold font-headline mb-2 text-on-surface">Change Date / Location</h1>
-                <p class="text-on-surface-variant">Update the date or location for {{ event.event_name }}.</p>
-            </div>
-            <a href="/event/{{ event.event_slug }}/manage"
-                class="px-6 py-2 border border-outline-variant rounded-full text-sm font-bold font-headline hover:bg-surface-container-highest transition-colors flex items-center gap-2">
-                <span class="material-symbols-outlined text-[18px]">close</span>
-                Cancel
+<body class="bg-surface-container min-h-screen text-on-surface font-body">
+
+    <!-- Top bar -->
+    <header class="bg-surface border-b border-outline-variant/20 sticky top-0 z-10">
+        <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-lg">confirmation_number</span>
+                </span>
+                <span class="font-headline font-extrabold text-lg">Gateo</span>
             </a>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Event Update</span>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-6 py-8 pb-20">
+        <!-- Page heading -->
+        <div class="mb-8">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wide mb-4">
+                <span class="material-symbols-outlined text-sm">event_repeat</span> Date / Location Update
+            </span>
+            <h1 class="text-3xl font-extrabold font-headline text-on-surface leading-tight">Update this event?</h1>
+            <p class="text-on-surface-variant mt-2 text-sm">Change the date or venue, then notify ticket holders. Refunds can be requested within 5 days of the change.</p>
         </div>
 
-        <!-- Form Card -->
-        <div class="bg-surface rounded-2xl shadow-xl shadow-slate-200/50 border border-outline-variant/30 p-8">
-            <div id="formMessage" class="hidden mb-6 p-4 rounded-xl text-sm font-medium font-body border"></div>
+        <!-- Event summary -->
+        {% set media = event.event_media|first if event.event_media else none %}
+        <section class="bg-surface border border-outline-variant/20 rounded-2xl p-6 mb-6">
+            <div class="flex items-center gap-4 pb-5 border-b border-outline-variant/10 mb-5">
+                {% if media %}
+                <div class="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-surface-container-highest">
+                    <img src="{{ get_media_url(media.filepath, media.media_type) }}" class="w-full h-full object-cover">
+                </div>
+                {% else %}
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-primary text-3xl">event</span>
+                </div>
+                {% endif %}
+                <div class="min-w-0">
+                    <h2 class="text-lg font-extrabold font-headline text-on-surface truncate">{{ event.event_name }}</h2>
+                    <p class="text-sm text-on-surface-variant flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">calendar_month</span>
+                        {{ event.event_date.strftime('%b %d, %Y') if event.event_date else 'Date not set' }}
+                        {% if event.event_time %} at {{ event.event_time.strftime('%I:%M %p') }}{% endif %}
+                    </p>
+                </div>
+            </div>
 
-            <!-- Warning Banner -->
-            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Location</p>
+                    <p class="text-sm font-bold text-on-surface">{{ event.event_country or '—' }}</p>
+                    <p class="text-xs text-on-surface-variant truncate">{{ event.event_location }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Sold</p>
+                    <p class="text-sm font-bold text-on-surface">{{ ticket_count }}</p>
+                    <p class="text-xs text-on-surface-variant">ticket{% if ticket_count != 1 %}s{% endif %} purchased</p>
+                </div>
+                <div>
+                    <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Starts</p>
+                    <p class="text-sm font-bold text-on-surface">{{ event.event_date.strftime('%b %d, %Y') if event.event_date else '—' }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ event.event_time.strftime('%I:%M %p') if event.event_time else '—' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Ends</p>
+                    <p class="text-sm font-bold text-on-surface">{{ event.event_end_date.strftime('%b %d, %Y') if event.event_end_date else '—' }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ event.event_end_date.strftime('%I:%M %p') if event.event_end_date else '—' }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Warning banner -->
+        <section class="bg-surface border border-outline-variant/20 rounded-2xl p-6 mb-6">
+            <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
                 <span class="material-symbols-outlined text-amber-600 mt-0.5">warning</span>
                 <div>
-                    <p class="text-sm font-bold font-headline text-amber-800">This will notify {{ ticket_count }} ticket holder(s)</p>
+                    <p class="text-sm font-bold text-amber-800">This will notify {{ ticket_count }} ticket holder(s)</p>
                     <p class="text-xs text-amber-700 mt-1">All ticket holders will be notified of the changes and given the option to request a refund within 5 days. You will not be able to withdraw funds during this period.</p>
                 </div>
             </div>
 
             {% if refund_window_active %}
-            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
+            <div class="mt-4 rounded-xl bg-red-50 border border-red-200 p-4 flex items-start gap-3">
                 <span class="material-symbols-outlined text-red-600 mt-0.5">block</span>
                 <div>
-                    <p class="text-sm font-bold font-headline text-red-800">Refund window is currently active</p>
+                    <p class="text-sm font-bold text-red-800">Refund window is currently active</p>
                     <p class="text-xs text-red-700 mt-1">A recent change was made. You cannot make another change or withdraw until the refund window closes.</p>
                 </div>
             </div>
             {% endif %}
+        </section>
 
+        <!-- Form -->
+        <section class="bg-surface border border-outline-variant/20 rounded-2xl p-6">
+            <div id="formMessage" class="hidden mb-6 p-4 rounded-xl text-sm font-medium"></div>
             <form id="changeDateLocationForm" class="space-y-8" onsubmit="handleChangeDateLocation(event, {{ event.event_id }})">
                 <!-- Section: Date & Time -->
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold font-headline text-on-surface mb-4 flex items-center gap-2">
+                <div>
+                    <h2 class="text-base font-extrabold font-headline text-on-surface mb-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">calendar_month</span>
                         Date & Time
                     </h2>
+                    <p class="text-sm text-on-surface-variant mb-5">Update the start or end date, and the end time for this event.</p>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-bold font-headline text-on-surface mb-2">Event Start Date</label>
+                            <label class="block text-sm font-semibold text-on-surface mb-2">Event Start Date</label>
                             <input type="date" name="event_date"
                                 value="{{ event.event_date.strftime('%Y-%m-%d') if event.event_date else '' }}"
-                                class="w-full bg-surface-container border-none ring-1 ring-outline-variant/50 focus:ring-primary rounded-xl px-4 py-3 text-sm text-on-surface transition-shadow outline-none">
+                                class="w-full bg-surface-container-low px-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary border border-outline-variant/20 transition-all">
                         </div>
-
                         <div>
-                            <label class="block text-sm font-bold font-headline text-on-surface mb-2">Event End Date</label>
+                            <label class="block text-sm font-semibold text-on-surface mb-2">Event End Date</label>
                             <input type="date" name="event_end_date"
                                 value="{{ event.event_end_date.strftime('%Y-%m-%d') if event.event_end_date else '' }}"
-                                class="w-full bg-surface-container border-none ring-1 ring-outline-variant/50 focus:ring-primary rounded-xl px-4 py-3 text-sm text-on-surface transition-shadow outline-none">
+                                class="w-full bg-surface-container-low px-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary border border-outline-variant/20 transition-all">
                         </div>
-
                         <div>
-                            <label class="block text-sm font-bold font-headline text-on-surface mb-2">Event End Time</label>
+                            <label class="block text-sm font-semibold text-on-surface mb-2">Event End Time</label>
                             <input type="time" name="event_end_time"
                                 value="{{ event.event_end_date.strftime('%H:%M') if event.event_end_date else '' }}"
-                                class="w-full bg-surface-container border-none ring-1 ring-outline-variant/50 focus:ring-primary rounded-xl px-4 py-3 text-sm text-on-surface transition-shadow outline-none">
+                                class="w-full bg-surface-container-low px-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary border border-outline-variant/20 transition-all">
                             <p class="text-xs text-on-surface-variant mt-1">Leave blank for 11:59 PM</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="h-px bg-outline-variant/30 w-full"></div>
+                <div class="h-px bg-outline-variant/10 w-full"></div>
 
                 <!-- Section: Location -->
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold font-headline text-on-surface mb-4 flex items-center gap-2">
+                <div>
+                    <h2 class="text-base font-extrabold font-headline text-on-surface mb-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">location_on</span>
                         Location
                     </h2>
-
+                    <p class="text-sm text-on-surface-variant mb-5">Update the venue or address for this event.</p>
                     <div>
-                        <label class="block text-sm font-bold font-headline text-on-surface mb-2">Venue / Address</label>
+                        <label class="block text-sm font-semibold text-on-surface mb-2">Venue / Address</label>
                         <input type="text" name="event_location" value="{{ event.event_location }}"
-                            class="w-full bg-surface-container border-none ring-1 ring-outline-variant/50 focus:ring-primary rounded-xl px-4 py-3 text-sm text-on-surface transition-shadow outline-none">
+                            class="w-full bg-surface-container-low px-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary border border-outline-variant/20 transition-all">
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="pt-6 flex justify-end gap-4">
+                <div class="pt-2">
                     <button type="submit"
-                        class="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-sm shadow-xl shadow-primary/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
+                        class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
                         Update & Notify Ticket Holders
                         <span class="material-symbols-outlined text-lg">send</span>
                     </button>
+                    <p class="text-center text-xs text-on-surface-variant mt-4">Ticket holders will be notified by email and can request a refund for 5 days after this change.</p>
                 </div>
             </form>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script>
         const formMessage = document.getElementById('formMessage');
@@ -148,11 +197,9 @@
             formMessage.innerText = msg;
             formMessage.classList.remove('hidden');
             if (isError) {
-                formMessage.classList.add('bg-error-container', 'text-on-error-container', 'border-error/20');
-                formMessage.classList.remove('bg-surface-container-highest', 'text-on-surface');
+                formMessage.classList.add('bg-red-50', 'text-red-600', 'border', 'border-red-200');
             } else {
-                formMessage.classList.remove('bg-error-container', 'text-on-error-container', 'border-error/20');
-                formMessage.classList.add('bg-surface-container-highest', 'text-on-surface', 'border-outline-variant/20');
+                formMessage.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
             }
         }
 
@@ -184,8 +231,8 @@
 
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerText = 'Saving...';
             submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">sync</span> Saving...';
 
             try {
                 const response = await fetch(`/create_event/edit/date_location/${eventId}`, {
