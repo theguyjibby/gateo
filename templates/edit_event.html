@@ -107,7 +107,7 @@
                                 <div class="flex flex-wrap gap-4 w-fit" id="currentMediaContainer">
                                     {% for media in event_media %}
                                     <div class="media-preview-card relative group w-32 h-32 rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden" id="media-card-{{ media.media_id }}" data-type="{% if media.filepath.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}video{% else %}image{% endif %}">
-                                        <img src="/{{ media.filepath }}" class="w-full h-full object-cover transition-all">
+                                        <img src="{{ get_media_url(media.filepath) }}" class="w-full h-full object-cover transition-all">
                                         <button type="button" onclick="removeMedia({{ media.media_id }})" class="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white w-7 h-7 rounded-full flex items-center justify-center transition-colors z-30" title="Remove Media">
                                             <span class="material-symbols-outlined text-[16px]">close</span>
                                         </button>

@@ -128,7 +128,7 @@
                 data-free="{% if event.lowest_price <= 0 %}free{% else %}paid{% endif %}">
                 {% if event.media %}
                 <div class="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-1000 ease-out"
-                    style="background-image: url('/{{ event.media }}');">
+                    style="background-image: url('{{ get_media_url(event.media) }}');">
                 </div>
                 {% else %}
                 <div class="absolute inset-0 bg-gradient-to-br from-primary to-secondary group-hover:scale-110 transition-transform duration-1000 ease-out">

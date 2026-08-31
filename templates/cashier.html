@@ -135,7 +135,7 @@
             <div class="group bg-surface border border-outline-variant/20 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all">
                 <div class="h-48 bg-surface-container-highest relative overflow-hidden">
                     {% if e.media %}
-                    <img src="/{{ e.media }}" alt="{{ e.event_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <img src="{{ get_media_url(e.media) }}" alt="{{ e.event_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     {% else %}
                     <div class="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20">
                         <span class="material-symbols-outlined text-6xl">image</span>

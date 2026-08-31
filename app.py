@@ -24,7 +24,7 @@ import hashlib
 import re
 import uuid
 from mailingteam import send_collaboration_request
-from cashier_mailing import send_withdrawal_link, send_withdrawal_success_email
+from cashier_mailing import send_withdrawal_link, send_withdrawal_success_email, send_cancellation_link
 
 
 
@@ -111,6 +111,7 @@ google = oauth.register(
 )
 
 from extensions import mail
+from s3 import init_s3, upload_to_s3, delete_from_s3, get_media_url, is_s3_enabled
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -120,6 +121,9 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 mail.init_app(app)
+
+init_s3(app)
+app.jinja_env.globals['get_media_url'] = get_media_url
 
 
 class Organizers(db.Model, UserMixin):
@@ -223,7 +227,8 @@ class TicketsUsers(db.Model):
     ticket_name = db.Column(db.String(200), nullable=False)
     purchase_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     organizers_id = db.Column(db.Integer, db.ForeignKey('organizers.id'), nullable=False)
-    is_purchased = db.Column(db.Boolean, default=False)
+    is_successful = db.Column(db.Boolean, default=False)
+    is_free = db.Column(db.Boolean, default=False)
     is_used = db.Column(db.Boolean, default=False)
     is_admin_issued = db.Column(db.Boolean, default=False)
     payment_reference = db.Column(db.String(100), nullable=True)
@@ -244,6 +249,17 @@ class Withdrawals(db.Model):
     paystack_recepient_code = db.Column(db.String(100), nullable=True)
     paystack_transfer_ref = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(20), default='pending')
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
+class Cancellations(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    organizer_id = db.Column(db.Integer, db.ForeignKey('organizers.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.event_id'), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    is_used = db.Column(db.Boolean, default=False)
+    used_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 
@@ -578,19 +594,23 @@ def create_event():
         db.session.commit()
 
         if uploaded_files:
-            upload_folder = os.path.join(app.root_path, 'static', 'upload')
-            os.makedirs(upload_folder, exist_ok=True)
             for file in uploaded_files:
                 if file and file.filename != '':
-                    filename = secure_filename(file.filename)
-                    unique_filename = str(uuid4())[:8] + "_" + filename
-                    filepath = os.path.join(upload_folder, unique_filename)
-                    file.save(filepath)
-                    
-                    relative_path = f"static/upload/{unique_filename}"
+                    if is_s3_enabled():
+                        key = upload_to_s3(file, folder='uploads')
+                        filepath = key
+                    else:
+                        upload_folder = os.path.join(app.root_path, 'static', 'upload')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        filename = secure_filename(file.filename)
+                        unique_filename = str(uuid4())[:8] + "_" + filename
+                        filepath_local = os.path.join(upload_folder, unique_filename)
+                        file.save(filepath_local)
+                        filepath = f"static/upload/{unique_filename}"
+
                     new_media = Event_Media(
                         event_id=new_event.event_id,
-                        filepath=relative_path
+                        filepath=filepath
                     )
                     db.session.add(new_media)
             db.session.commit()
@@ -627,7 +647,7 @@ def edit_event(event_id):
             if new_date.date() < date.today():
                 return jsonify({'message': 'Event date cannot be updated to a past date.'}), 400
             
-        has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).first() is not None
+        has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).first() is not None
 
         if has_sold_tickets:
             event.event_description = data.get('event_description', event.event_description)
@@ -672,21 +692,31 @@ def edit_event(event_id):
             for m_id in removed_media_ids:
                 media_to_delete = db.session.get(Event_Media, int(m_id))
                 if media_to_delete and media_to_delete.event_id == event_id:
+                    if is_s3_enabled():
+                        delete_from_s3(media_to_delete.filepath)
+                    else:
+                        local_path = os.path.join(app.root_path, media_to_delete.filepath)
+                        if os.path.exists(local_path):
+                            os.remove(local_path)
                     db.session.delete(media_to_delete)
 
         uploaded_files = request.files.getlist('event_media')
         if uploaded_files and uploaded_files[0].filename != '':
-            upload_folder = os.path.join(app.root_path, 'static', 'upload')
-            os.makedirs(upload_folder, exist_ok=True)
             for file in uploaded_files:
                 if file and file.filename != '':
-                    filename = secure_filename(file.filename)
-                    unique_filename = str(uuid4())[:8] + "_" + filename
-                    filepath = os.path.join(upload_folder, unique_filename)
-                    file.save(filepath)
-                    
-                    relative_path = f"static/upload/{unique_filename}"
-                    media = Event_Media(event_id=event_id, filepath=relative_path)
+                    if is_s3_enabled():
+                        key = upload_to_s3(file, folder='uploads')
+                        filepath = key
+                    else:
+                        upload_folder = os.path.join(app.root_path, 'static', 'upload')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        filename = secure_filename(file.filename)
+                        unique_filename = str(uuid4())[:8] + "_" + filename
+                        filepath_local = os.path.join(upload_folder, unique_filename)
+                        file.save(filepath_local)
+                        filepath = f"static/upload/{unique_filename}"
+
+                    media = Event_Media(event_id=event_id, filepath=filepath)
                     db.session.add(media)
 
         db.session.commit()
@@ -694,7 +724,7 @@ def edit_event(event_id):
     
     
     
-    has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).first() is not None
+    has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).first() is not None
     return render_template('edit_event.html', event=event, event_media=event_media, has_sold_tickets=has_sold_tickets)
 
 
@@ -709,7 +739,7 @@ def change_location_date(event_id):
     if getattr(event, 'is_suspended', False):
         return jsonify({'message': 'Event is currently suspended.'}), 403
 
-    has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).first() is not None
+    has_sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).first() is not None
     if not has_sold_tickets:
         return jsonify({'message': 'No tickets sold yet. Use the regular edit form.'}), 400
 
@@ -768,7 +798,7 @@ def change_location_date(event_id):
 
         db.session.commit()
 
-        ticket_holders = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).distinct(TicketsUsers.user_email).all()
+        ticket_holders = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).distinct(TicketsUsers.user_email).all()
         from emailingticket import send_date_location_change_notification
         new_date_display = event.event_date.strftime('%B %d, %Y') if event.event_date else None
         new_end_date_display = event.event_end_date.strftime('%B %d, %Y') if event.event_end_date else None
@@ -789,7 +819,7 @@ def change_location_date(event_id):
 
         return jsonify({'message': 'Event date and/or location updated successfully. Ticket holders have been notified.'}), 200
 
-    ticket_count = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).count()
+    ticket_count = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).count()
     refund_window_active = False
     if getattr(event, 'date_location_changed_at', None):
         window_end = event.date_location_changed_at + datetime.timedelta(days=5)
@@ -824,7 +854,7 @@ def request_refund(event_slug):
         event_id=event.event_id,
         user_email=user_email,
         ticket_unique_id=ticket_unique_id,
-        is_purchased=True
+        is_successful=True
     ).first()
     if not ticket:
         return jsonify({'message': 'Ticket not found.'}), 404
@@ -862,11 +892,67 @@ def suspend_event(event_id):
         return jsonify({'message': 'Event not found'}), 404
     if event.organizers_id != current_user.id:
         return jsonify({'message': 'Unauthorized'}), 403
+    if event.is_cancelled:
+        return jsonify({'message': 'This event has been cancelled and cannot be suspended.'}), 400
 
     event.is_suspended = not getattr(event, 'is_suspended', False)
     db.session.commit()
     status = 'suspended' if event.is_suspended else 'resumed'
     return jsonify({'message': f'Event successfully {status}.'}), 200
+
+
+@app.route('/create_event/cancel/<int:event_id>', methods=['POST'])
+@login_required
+def request_event_cancellation(event_id):
+    event = db.session.get(Events, event_id)
+    if not event:
+        return jsonify({'message': 'Event not found'}), 404
+    if event.organizers_id != current_user.id:
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    if event.is_cancelled:
+        return jsonify({'message': 'This event has already been cancelled.'}), 400
+
+    from cashier_mailing import send_cancellation_link
+
+    existing = Cancellations.query.filter_by(
+        event_id=event_id,
+        organizer_id=current_user.id,
+        is_used=False
+    ).order_by(Cancellations.created_at.desc()).first()
+
+    if existing:
+        token_age = datetime.datetime.utcnow() - existing.created_at
+        if token_age < datetime.timedelta(minutes=5):
+            organizer_email = db.session.get(Organizers, event.organizers_id).email
+            send_cancellation_link(
+                organizer_email=organizer_email,
+                event_name=event.event_name,
+                cancel_token=existing.token,
+                base_url=request.host_url
+            )
+            return jsonify({'message': 'Cancellation request sent. Check your email to confirm.'}), 200
+
+    token = secrets.token_urlsafe(32)
+    cancellation = Cancellations(
+        token=token,
+        organizer_id=current_user.id,
+        event_id=event_id
+    )
+    db.session.add(cancellation)
+    db.session.commit()
+
+    organizer_email = db.session.get(Organizers, event.organizers_id).email
+    sent = send_cancellation_link(
+        organizer_email=organizer_email,
+        event_name=event.event_name,
+        cancel_token=token,
+        base_url=request.host_url
+    )
+    if not sent:
+        return jsonify({'message': 'Failed to send cancellation link'}), 500
+    return jsonify({'message': 'Cancellation request sent. Check your email to confirm.'}), 200
+
 
 @app.route('/create_event/delete/<int:event_id>', methods=['DELETE'])
 @login_required
@@ -884,11 +970,16 @@ def delete_event(event_id):
     if withdrawal_exists:
         return jsonify({'message': 'Cancellation blocked. A withdrawal has already been made for this event.'}), 400
 
-    purchased_count = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True).count()
+    paid_purchased = db.session.query(TicketsUsers).filter_by(
+        event_id=event.event_id,
+        is_successful=True,
+        is_free=False,
+        is_admin_issued=False
+    ).filter(TicketsUsers.ticket_price > 0).all()
 
-    if purchased_count > 0:
+    if paid_purchased:
         refund_total = 0
-        for ticket in db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True):
+        for ticket in paid_purchased:
             if not ticket.refund_requested:
                 ticket.refund_requested = True
                 ticket.refund_requested_at = datetime.datetime.utcnow()
@@ -898,7 +989,13 @@ def delete_event(event_id):
         db.session.commit()
 
         from emailingticket import send_event_cancelled_notification
-        for email in db.session.query(TicketsUsers.user_email).filter_by(event_id=event.event_id, is_purchased=True).distinct():
+        paid_emails = db.session.query(TicketsUsers.user_email).filter_by(
+            event_id=event.event_id,
+            is_successful=True,
+            is_free=False,
+            is_admin_issued=False
+        ).filter(TicketsUsers.ticket_price > 0).distinct()
+        for email in paid_emails:
             send_event_cancelled_notification(
                 to_email=email[0],
                 event_name=event.event_name
@@ -910,17 +1007,148 @@ def delete_event(event_id):
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'}), 200
 
+
+@app.route('/cashier/cancel', methods=['GET'])
+def cancel_event_dashboard():
+    token = request.args.get('token')
+    if not token:
+        return render_template('expired_link.html', message='Invalid cancellation link'), 400
+
+    cancellation = Cancellations.query.filter_by(token=token).first()
+    if not cancellation:
+        return render_template('expired_link.html', message='Invalid cancellation link'), 400
+
+    if cancellation.is_used:
+        return render_template('expired_link.html', message='This cancellation link has already been used'), 400
+
+    token_age = datetime.datetime.utcnow() - cancellation.created_at
+    if token_age > datetime.timedelta(minutes=5):
+        return render_template('expired_link.html', message='This cancellation link has expired'), 400
+
+    event = db.session.get(Events, cancellation.event_id)
+    if not event:
+        return render_template('expired_link.html', message='Event not found'), 404
+
+    paid_tickets = db.session.query(TicketsUsers).filter_by(
+        event_id=event.event_id,
+        is_successful=True,
+        is_free=False,
+        is_admin_issued=False
+    ).filter(TicketsUsers.ticket_price > 0).all()
+    free_purchased = db.session.query(TicketsUsers).filter_by(
+        event_id=event.event_id,
+        is_successful=True,
+        is_free=True
+    ).count()
+    total_sold = db.session.query(TicketsUsers).filter_by(
+        event_id=event.event_id,
+        is_successful=True
+    ).count()
+    withdrawal = db.session.query(Withdrawals).filter_by(event_id=event.event_id).first()
+
+    has_paid_tickets = len(paid_tickets) > 0
+    has_withdrawal = withdrawal is not None
+
+    ticket_count = 0
+    refund_total = 0
+    for ticket in paid_tickets:
+        ticket_count += ticket.ticket_quantity or 1
+        refund_total += ticket.ticket_price * (ticket.ticket_quantity or 1) * 0.94
+
+    return render_template('cancel_event.html',
+                           event=event,
+                           token=token,
+                           has_paid_tickets=has_paid_tickets,
+                           has_withdrawal=has_withdrawal,
+                           paid_ticket_count=ticket_count,
+                           free_ticket_count=free_purchased,
+                           total_sold=total_sold,
+                           refund_total=refund_total)
+
+
+@app.route('/cashier/cancel', methods=['POST'])
+def cancel_event_confirmed():
+    data = request.get_json() or {}
+    token = data.get('token') or request.args.get('token')
+    reason = (data.get('reason') or '').strip()
+    if not token:
+        return jsonify({'message': 'Invalid cancellation link'}), 400
+
+    cancellation = Cancellations.query.filter_by(token=token).first()
+    if not cancellation:
+        return jsonify({'message': 'Invalid cancellation link'}), 400
+
+    if cancellation.is_used:
+        return jsonify({'message': 'This cancellation link has already been used'}), 400
+
+    token_age = datetime.datetime.utcnow() - cancellation.created_at
+    if token_age > datetime.timedelta(minutes=5):
+        return jsonify({'message': 'This cancellation link has expired'}), 400
+
+    event = db.session.get(Events, cancellation.event_id)
+    if not event:
+        return jsonify({'message': 'Event not found'}), 404
+
+    if event.is_cancelled:
+        return jsonify({'message': 'This event has already been cancelled.'}), 400
+
+    withdrawal_exists = db.session.query(Withdrawals).filter_by(event_id=event.event_id).first() is not None
+    if withdrawal_exists:
+        return jsonify({'message': 'Cancellation blocked. A withdrawal has already been made for this event.'}), 400
+
+    cancellation.reason = reason
+    cancellation.is_used = True
+    cancellation.used_at = datetime.datetime.utcnow()
+
+    paid_purchased = db.session.query(TicketsUsers).filter_by(
+        event_id=event.event_id,
+        is_successful=True,
+        is_free=False,
+        is_admin_issued=False
+    ).filter(TicketsUsers.ticket_price > 0).all()
+
+    if paid_purchased:
+        refund_total = 0
+        for ticket in paid_purchased:
+            if not ticket.refund_requested:
+                ticket.refund_requested = True
+                ticket.refund_requested_at = datetime.datetime.utcnow()
+            refund_total += ticket.ticket_price * 0.94
+
+        event.is_cancelled = True
+        db.session.commit()
+
+        from emailingticket import send_event_cancelled_notification
+        paid_emails = db.session.query(TicketsUsers.user_email).filter_by(
+            event_id=event.event_id,
+            is_successful=True,
+            is_free=False,
+            is_admin_issued=False
+        ).filter(TicketsUsers.ticket_price > 0).distinct()
+        for email in paid_emails:
+            send_event_cancelled_notification(
+                to_email=email[0],
+                event_name=event.event_name
+            )
+
+        return jsonify({'message': f'Event cancelled. Refunds of ₦{refund_total:,.2f} have been initiated for all buyers.'}), 200
+
+    db.session.delete(event)
+    db.session.commit()
+    return jsonify({'message': 'Event deleted successfully'}), 200
+
+
 @app.route('/event/organizer', methods=['GET'])
 @login_required
 def get_organizer_events():
     organizer_id = current_user.id
     # Using order_by to get newest first
-    events = db.session.query(Events).filter_by(organizers_id=organizer_id).order_by(Events.event_creation_date.desc()).all()
+    events = db.session.query(Events).filter_by(organizers_id=organizer_id, is_cancelled=False).order_by(Events.event_creation_date.desc()).all()
     
     events_data = []
     for event in events:
         media = db.session.query(Event_Media).filter_by(event_id=event.event_id).first()
-        sold_count = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True).count()
+        sold_count = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True).count()
         has_withdrawal = db.session.query(Withdrawals).filter_by(event_id=event.event_id).first() is not None
         events_data.append({
             'event_id': event.event_id,
@@ -933,14 +1161,13 @@ def get_organizer_events():
             'organizers_id': event.organizers_id,
             'event_creation_date': event.event_creation_date.isoformat() if event.event_creation_date else None,
             'event_slug': event.event_slug,
-            'media': media.filepath if media else None,
+            'media': get_media_url(media.filepath) if media else None,
             'is_suspended': getattr(event, 'is_suspended', False),
             'is_public': getattr(event, 'is_public', True),
             'is_cancelled': getattr(event, 'is_cancelled', False),
             'has_sold_tickets': sold_count > 0,
             'has_withdrawal': has_withdrawal
         })
-    
     return jsonify({'events': events_data}), 200
 
 
@@ -1025,7 +1252,7 @@ def create_ticket(event_id):
     tickets = TicketsOrganizers.query.filter_by(event_id=event_id).all()
     # Pre-calculate sold counts
     for t in tickets:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_successful=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
 
     return render_template('create_ticket.html', event=event, tickets=tickets)
@@ -1086,7 +1313,7 @@ def get_paid_tickets(event_id):
         return jsonify({'message': 'Unauthorized'}), 403
 
     if request.method == 'POST':
-        paid_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_purchased=True).all()
+        paid_tickets = TicketsUsers.query.filter_by(event_id=event_id, is_successful=True).all()
 
         tickets_data = []
         for ticket in paid_tickets:
@@ -1126,7 +1353,7 @@ def get_paid_tickets(event_id):
     from datetime import datetime
     now = datetime.now()
     for t in event.TicketsOrganizers:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=t.ticket_type_id, is_successful=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
         t.is_expired = bool(event.event_end_date) and now >= event.event_end_date
 
@@ -1173,7 +1400,7 @@ def create_organizer_issued_ticket(event_id):
         return jsonify({'message': 'Ticket sales have ended'}), 400
     
     if ticket_type_obj.ticket_quantity is not None:
-        tickets_sold = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_obj.ticket_type_id, is_purchased=True).count()
+        tickets_sold = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_obj.ticket_type_id, is_successful=True).count()
         if tickets_sold + ticket_quantity > ticket_type_obj.ticket_quantity:
             return jsonify({'message': 'Ticket type is sold out'}), 400
 
@@ -1183,7 +1410,7 @@ def create_organizer_issued_ticket(event_id):
     existing_email_tickets = TicketsUsers.query.filter_by(
         event_id=event_id,
         user_email=user_email,
-        is_purchased=True
+        is_successful=True
     ).count()
     if existing_email_tickets + ticket_quantity > 10:
         return jsonify({'message': 'Cannot issue more than 10 tickets to one email for this event'}), 400
@@ -1208,7 +1435,8 @@ def create_organizer_issued_ticket(event_id):
                 ticket_quantity=1,
                 ticket_name=ticket_name,
                 organizers_id=current_user.id,
-                is_purchased=True,
+                is_successful=True,
+                is_free=False,
                 is_used=False,
                 is_admin_issued=True
             )
@@ -1313,7 +1541,7 @@ def view_public_event(slug):
     from datetime import datetime
     now = datetime.now()
     for t in ticket_details:
-        t.sold_count = TicketsUsers.query.filter_by(event_id=particular_event.event_id, ticket_type_id=t.ticket_type_id, is_purchased=True).count()
+        t.sold_count = TicketsUsers.query.filter_by(event_id=particular_event.event_id, ticket_type_id=t.ticket_type_id, is_successful=True).count()
         t.is_sold_out = (t.sold_count >= t.ticket_quantity) if t.ticket_quantity is not None else False
         t.is_expired = bool(particular_event.event_end_date) and now >= particular_event.event_end_date
         t.available_quantity = max(0, min((t.ticket_quantity - t.sold_count) if t.ticket_quantity is not None else 5, 5))
@@ -1350,6 +1578,8 @@ def manage_event(slug):
         return "Event not found", 404
     if particular_event.organizers_id != current_user.id:
         return jsonify({'message': 'Unauthorized'}), 403
+    if particular_event.is_cancelled:
+        return "Event not found", 404
 
     event_media = Event_Media.query.filter_by(event_id=particular_event.event_id).all()
     banner = next((m for m in event_media if not m.filepath.lower().endswith(('.mp4', '.mov', '.avi', '.webm'))), None)
@@ -1359,7 +1589,7 @@ def manage_event(slug):
     banner_path = banner.filepath if banner else None
     banner_id = banner.media_id if banner else None
 
-    has_sold_tickets = TicketsUsers.query.filter_by(event_id=particular_event.event_id, is_purchased=True).first() is not None
+    has_sold_tickets = TicketsUsers.query.filter_by(event_id=particular_event.event_id, is_successful=True).first() is not None
     has_withdrawal = Withdrawals.query.filter_by(event_id=particular_event.event_id).first() is not None
 
     return render_template('event_management.html',
@@ -1410,7 +1640,8 @@ def search_ticket(event_id):
                 'ticket_type': t.ticket_type,
                 'ticket_name': t.ticket_name,
                 'ticket_price': t.ticket_price,
-                'is_purchased': t.is_purchased,
+                'is_successful': t.is_successful,
+                'is_free': t.is_free,
                 'purchase_date': t.purchase_date.isoformat() if t.purchase_date else None,
                 'is_used': t.is_used,
                 'is_admin_issued': t.is_admin_issued
@@ -1474,7 +1705,7 @@ def team_google_callback():
 @app.route('/team', methods=['GET'])
 @login_required
 def team_events():
-    events = Events.query.filter_by(organizers_id=current_user.id).order_by(Events.event_creation_date.desc()).all()
+    events = Events.query.filter_by(organizers_id=current_user.id, is_cancelled=False).order_by(Events.event_creation_date.desc()).all()
 
     return render_template('team_events.html', events=events)
 
@@ -1611,7 +1842,7 @@ def initialize_ticket_purchase(event_id):
     if purchase_quantity > 5:
         return jsonify({'message' : "one email can't purchase more than 5 tickets at once"}), 400
     
-    check_email_purchase_quantity = TicketsUsers.query.filter_by(event_id=event_id, user_email=user_email,  is_purchased=True).count()
+    check_email_purchase_quantity = TicketsUsers.query.filter_by(event_id=event_id, user_email=user_email,  is_successful=True).count()
     if check_email_purchase_quantity + purchase_quantity > 5:
         return jsonify({'message' : "one email can't purchase more than 5 tickets with an email"}), 400
 
@@ -1629,7 +1860,7 @@ def initialize_ticket_purchase(event_id):
     stale = TicketsUsers.query.filter(
         TicketsUsers.event_id == event_id,
         TicketsUsers.ticket_type_id == ticket_type_id,
-        TicketsUsers.is_purchased == False,
+        TicketsUsers.is_successful == False,
         TicketsUsers.purchase_date < cutoff
     ).all()
     if stale:
@@ -1637,7 +1868,7 @@ def initialize_ticket_purchase(event_id):
             db.session.delete(t)
         db.session.commit()
 
-    sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_id, is_purchased=True).count()
+    sold_tickets = TicketsUsers.query.filter_by(event_id=event_id, ticket_type_id=ticket_type_id, is_successful=True).count()
     total_tickets = ticket_type.ticket_quantity if ticket_type.ticket_quantity is not None else float('inf')
     remaining_tickets = total_tickets - sold_tickets
     
@@ -1676,7 +1907,8 @@ def initialize_ticket_purchase(event_id):
                 ticket_quantity=1,
                 ticket_name=user_name,
                 organizers_id=event.organizers_id,
-                is_purchased=True,
+                is_successful=True,
+                is_free=True,
                 is_used=False,
                 is_admin_issued=False,
                 payment_reference=reference_code
@@ -1766,7 +1998,8 @@ def initialize_ticket_purchase(event_id):
         ticket_quantity=purchase_quantity,
         ticket_name=user_name,
         organizers_id=event.organizers_id,
-        is_purchased=False,
+        is_successful=False,
+        is_free=False,
         is_used=False,
         is_admin_issued=False,
         payment_reference=reference_code
@@ -1791,7 +2024,7 @@ def payment_status(reference):
     payment = TicketsUsers.query.filter_by(payment_reference=reference).first()
     if not payment:
         return jsonify({"status": "not_found"}), 404
-    if payment.is_purchased:
+    if payment.is_successful:
         return jsonify({"status": "confirmed"})
     return jsonify({"status": "pending"})
 
@@ -1917,13 +2150,13 @@ def paystack_webhook():
     # -----------------------------
     # 5. Prevent duplicate processing
     # -----------------------------
-    if payment.is_purchased:
+    if payment.is_successful:
         return jsonify({"message": "Already processed"}), 200
 
     # -----------------------------
     # 6. Update payment
     # -----------------------------
-    payment.is_purchased = True
+    payment.is_successful = True
 
 
     db.session.commit()
@@ -1974,7 +2207,8 @@ def paystack_webhook():
                 ticket_quantity=1,
                 ticket_name=payment.ticket_name,
                 organizers_id=event.organizers_id,
-                is_purchased=True,
+                is_successful=True,
+                is_free=False,
                 is_used=False,
                 is_admin_issued=False,
                 payment_reference=reference
@@ -2028,11 +2262,11 @@ def cashier():
    
     organizer_id = current_user.id
 
-    events = db.session.query(Events).filter_by(organizers_id=organizer_id).order_by(Events.event_creation_date.desc()).all()
+    events = db.session.query(Events).filter_by(organizers_id=organizer_id, is_cancelled=False).order_by(Events.event_creation_date.desc()).all()
 
     events_data = []
     for event in events:
-        sales = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True, is_admin_issued=False)
+        sales = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True, is_admin_issued=False)
         Total_Revenue = 0
         for sale in sales:
             ticket_price = sale.ticket_price
@@ -2060,7 +2294,7 @@ def cashier():
             'event_creation_date': event.event_creation_date.isoformat() if event.event_creation_date else None,
             'event_end_date': event.event_end_date.isoformat() if event.event_end_date else None,
 
-            'media': media.filepath if media else None,
+            'media': get_media_url(media.filepath) if media else None,
             'Total_Revenue': Total_Revenue,
             'withdrawable_revenue': organizer_revenue if event_full_withdrawal_datetime(event) and datetime.datetime.now() >= event_full_withdrawal_datetime(event) else withdrawable_before_event
 
@@ -2101,7 +2335,7 @@ def withdrawal_link(event_id):
         if datetime.datetime.utcnow() < window_end:
             return jsonify({'message': 'Withdrawal blocked. A date/location change was recently made. Please wait for the 5-day refund window to close.'}), 403
     
-    sales = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True, is_admin_issued=False)
+    sales = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True, is_admin_issued=False)
     Total_Revenue = 0
     for sale in sales:
         ticket_price = sale.ticket_price
@@ -2174,7 +2408,7 @@ def withdrawal_dashboard(organizer_id, event_id):
     if event.organizers_id != organizer_id:
         return render_template('expired_link.html', message='Unauthorized'), 401
     
-    tickets = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True, is_admin_issued=False)
+    tickets = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True, is_admin_issued=False)
     Total_Revenue = 0
 
     for ticket in tickets:
@@ -2195,7 +2429,7 @@ def withdrawal_dashboard(organizer_id, event_id):
         'event_time': event.event_time.strftime('%H:%M:%S') if event.event_time else None,
         'organizers_id': event.organizers_id,
         'event_end_date': event.event_end_date.isoformat() if event.event_end_date else None,
-        'media': media.filepath if media else None,
+        'media': get_media_url(media.filepath) if media else None,
         'Total_Revenue': Total_Revenue,
         'withdrawable_revenue': organizer_revenue if event_full_withdrawal_datetime(event) and datetime.datetime.now() >= event_full_withdrawal_datetime(event) else withdrawable_before_event
         })
@@ -2249,7 +2483,7 @@ def process_withdrawal(organizer_id, event_id):
     if error:
         return jsonify({'message': error}), 400
 
-    tickets = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_purchased=True, is_admin_issued=False)
+    tickets = db.session.query(TicketsUsers).filter_by(event_id=event.event_id, is_successful=True, is_admin_issued=False)
     Total_Revenue = 0
     for ticket in tickets:
         Total_Revenue += ticket.ticket_price
@@ -2445,6 +2679,12 @@ def resolve_bank_account(event_id):
 
 
 
+
+# On startup, ensure the schema exists. db.create_all() only creates
+# missing tables/columns for a fresh database; it never alters existing
+# tables. For an existing database that was created before the
+# is_purchased -> is_successful / is_free rename, run
+# `python migrate_tickets_flags.py` once to migrate it in place.
 
 with app.app_context():
     db.create_all()

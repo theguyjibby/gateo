@@ -74,17 +74,17 @@
                 {% for media in event_media %}
                 <div class="flex-shrink-0 w-full h-full snap-center relative">
                     {% if media.filepath.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
-                    <video src="/{{ media.filepath }}" class="w-full h-full object-cover hero-video" muted loop
+                    <video src="{{ get_media_url(media.filepath) }}" class="w-full h-full object-cover hero-video" muted loop
                         playsinline></video>
                     {% else %}
-                    <img src="/{{ media.filepath }}" class="w-full h-full object-cover hero-photo">
+                    <img src="{{ get_media_url(media.filepath) }}" class="w-full h-full object-cover hero-photo">
                     {% endif %}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                 </div>
                 {% endfor %}
                 {% elif banner_path %}
                 <div class="flex-shrink-0 w-full h-full snap-center relative">
-                    <img src="/{{ banner_path }}" class="w-full h-full object-cover hero-photo">
+                    <img src="{{ get_media_url(banner_path) }}" class="w-full h-full object-cover hero-photo">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                 </div>
                 {% else %}

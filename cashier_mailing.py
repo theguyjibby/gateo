@@ -38,6 +38,36 @@ def send_withdrawal_link(
         return False
 
 
+def send_cancellation_link(
+    organizer_email,
+    event_name,
+    cancel_token,
+    base_url,
+):
+    try:
+        msg = Message(
+            subject=f"Cancellation Request - {event_name}",
+            recipients=[organizer_email],
+        )
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto;">
+            <h2>{event_name}</h2>
+            <p>You have requested to cancel this event.</p>
+            <p>To confirm and complete the cancellation, click the link below.</p>
+            <p><a href="{base_url}cashier/cancel?token={cancel_token}" style="background-color:#dc2626; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; font-weight:bold;">Review and Cancel Event</a></p>
+            <p style="color:#6b7280; font-size:12px;">If you did not request this, you can safely ignore this email.</p>
+        </div>
+        """
+
+        mail.send(msg)
+        return True
+
+    except Exception as e:
+        print("Cancellation Link Email Error:", e)
+        return False
+
+
 def send_withdrawal_success_email(
     organizer_email,
     event_name,
