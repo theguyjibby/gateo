@@ -39,10 +39,27 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('secret_key')
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=30)
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'upload')
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY')
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
 PAYSTACK_PUBLIC_KEY_TEST = os.getenv('PAYSTACK_TEST_PUBLIC_KEY')
 PAYSTACK_SECRET_KEY_TEST = os.getenv('PAYSTACK_TEST_SECRET_KEY')
+
+
+ALLOWED_EXTENSIONS = {
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp',
+    'mp4', 'mov', 'avi', 'webm', 'm4v', 'mkv',
+}
+
+
+def is_allowed_filename(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.errorhandler(413)
+def request_entity_too_large(e):
+    return jsonify({'message': 'Uploaded file is too large. Maximum size is 10MB.'}), 413
 
 
 BANK_CODES = {
@@ -196,6 +213,7 @@ class Event_Media(db.Model):
     media_id= db.Column(db.Integer, primary_key=True)
     filepath = db.Column(db.String(200), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.event_id'), nullable=False)
+    media_type = db.Column(db.String(10), nullable=False, default='image')
 
 
     
@@ -595,24 +613,31 @@ def create_event():
 
         if uploaded_files:
             for file in uploaded_files:
-                if file and file.filename != '':
+                if file and file.filename != '' and is_allowed_filename(file.filename):
+                    media_type = 'image'
                     if is_s3_enabled():
-                        key = upload_to_s3(file, folder='uploads')
+                        key, resource_type = upload_to_s3(file, folder='uploads')
                         filepath = key
+                        if resource_type == 'video':
+                            media_type = 'video'
                     else:
-                        upload_folder = os.path.join(app.root_path, 'static', 'upload')
+                        upload_folder = app.config['UPLOAD_FOLDER']
                         os.makedirs(upload_folder, exist_ok=True)
                         filename = secure_filename(file.filename)
                         unique_filename = str(uuid4())[:8] + "_" + filename
                         filepath_local = os.path.join(upload_folder, unique_filename)
                         file.save(filepath_local)
                         filepath = f"static/upload/{unique_filename}"
+                        if filename.lower().endswith(('.mp4', '.mov', '.avi', '.webm')):
+                            media_type = 'video'
 
-                    new_media = Event_Media(
-                        event_id=new_event.event_id,
-                        filepath=filepath
-                    )
-                    db.session.add(new_media)
+                    if filepath:
+                        new_media = Event_Media(
+                            event_id=new_event.event_id,
+                            filepath=filepath,
+                            media_type=media_type
+                        )
+                        db.session.add(new_media)
             db.session.commit()
         return jsonify({'message': 'Event created successfully','event_id': new_event.event_id}), 201
     return render_template('create_event.html')
@@ -703,21 +728,27 @@ def edit_event(event_id):
         uploaded_files = request.files.getlist('event_media')
         if uploaded_files and uploaded_files[0].filename != '':
             for file in uploaded_files:
-                if file and file.filename != '':
+                if file and file.filename != '' and is_allowed_filename(file.filename):
+                    media_type = 'image'
                     if is_s3_enabled():
-                        key = upload_to_s3(file, folder='uploads')
+                        key, resource_type = upload_to_s3(file, folder='uploads')
                         filepath = key
+                        if resource_type == 'video':
+                            media_type = 'video'
                     else:
-                        upload_folder = os.path.join(app.root_path, 'static', 'upload')
+                        upload_folder = app.config['UPLOAD_FOLDER']
                         os.makedirs(upload_folder, exist_ok=True)
                         filename = secure_filename(file.filename)
                         unique_filename = str(uuid4())[:8] + "_" + filename
                         filepath_local = os.path.join(upload_folder, unique_filename)
                         file.save(filepath_local)
                         filepath = f"static/upload/{unique_filename}"
+                        if filename.lower().endswith(('.mp4', '.mov', '.avi', '.webm')):
+                            media_type = 'video'
 
-                    media = Event_Media(event_id=event_id, filepath=filepath)
-                    db.session.add(media)
+                    if filepath:
+                        media = Event_Media(event_id=event_id, filepath=filepath, media_type=media_type)
+                        db.session.add(media)
 
         db.session.commit()
         return jsonify({'message': 'Event updated successfully', 'event_slug': event.event_slug}), 200
@@ -954,6 +985,23 @@ def request_event_cancellation(event_id):
     return jsonify({'message': 'Cancellation request sent. Check your email to confirm.'}), 200
 
 
+def delete_event_media(event_id):
+    """Delete all media files (Cloudinary or local) for an event."""
+    media_rows = Event_Media.query.filter_by(event_id=event_id).all()
+    for media in media_rows:
+        if not media.filepath:
+            continue
+        if is_s3_enabled() and not media.filepath.startswith('static/upload/'):
+            delete_from_s3(media.filepath)
+        else:
+            local_path = os.path.join(app.root_path, media.filepath)
+            if os.path.exists(local_path):
+                try:
+                    os.remove(local_path)
+                except OSError:
+                    pass
+
+
 @app.route('/create_event/delete/<int:event_id>', methods=['DELETE'])
 @login_required
 def delete_event(event_id):
@@ -1004,6 +1052,7 @@ def delete_event(event_id):
         return jsonify({'message': f'Event cancelled. Refunds of ₦{refund_total:,.2f} have been initiated for all buyers.'}), 200
 
     db.session.delete(event)
+    delete_event_media(event.event_id)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'}), 200
 
@@ -1134,6 +1183,7 @@ def cancel_event_confirmed():
         return jsonify({'message': f'Event cancelled. Refunds of ₦{refund_total:,.2f} have been initiated for all buyers.'}), 200
 
     db.session.delete(event)
+    delete_event_media(event.event_id)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'}), 200
 
@@ -1161,7 +1211,7 @@ def get_organizer_events():
             'organizers_id': event.organizers_id,
             'event_creation_date': event.event_creation_date.isoformat() if event.event_creation_date else None,
             'event_slug': event.event_slug,
-            'media': get_media_url(media.filepath) if media else None,
+            'media': get_media_url(media.filepath, media.media_type) if media else None,
             'is_suspended': getattr(event, 'is_suspended', False),
             'is_public': getattr(event, 'is_public', True),
             'is_cancelled': getattr(event, 'is_cancelled', False),
@@ -2294,7 +2344,7 @@ def cashier():
             'event_creation_date': event.event_creation_date.isoformat() if event.event_creation_date else None,
             'event_end_date': event.event_end_date.isoformat() if event.event_end_date else None,
 
-            'media': get_media_url(media.filepath) if media else None,
+            'media': get_media_url(media.filepath, media.media_type) if media else None,
             'Total_Revenue': Total_Revenue,
             'withdrawable_revenue': organizer_revenue if event_full_withdrawal_datetime(event) and datetime.datetime.now() >= event_full_withdrawal_datetime(event) else withdrawable_before_event
 
@@ -2429,7 +2479,7 @@ def withdrawal_dashboard(organizer_id, event_id):
         'event_time': event.event_time.strftime('%H:%M:%S') if event.event_time else None,
         'organizers_id': event.organizers_id,
         'event_end_date': event.event_end_date.isoformat() if event.event_end_date else None,
-        'media': get_media_url(media.filepath) if media else None,
+        'media': get_media_url(media.filepath, media.media_type) if media else None,
         'Total_Revenue': Total_Revenue,
         'withdrawable_revenue': organizer_revenue if event_full_withdrawal_datetime(event) and datetime.datetime.now() >= event_full_withdrawal_datetime(event) else withdrawable_before_event
         })

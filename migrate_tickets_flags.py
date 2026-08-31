@@ -73,6 +73,26 @@ def run():
         ))
         print(f"Backfilled is_free for {res.rowcount} free ticket(s)")
 
+    # 4. Ensure the event media table has the media_type column (correct video URLs)
+    media_table = app_module.Event_Media.__tablename__
+    if media_table in inspect(engine).get_table_names():
+        media_cols = [c['name'] for c in inspect(engine).get_columns(media_table)]
+        if 'media_type' not in media_cols:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {media_table} ADD COLUMN media_type VARCHAR(10) DEFAULT 'image'"
+                ))
+            print(f"Added {media_table}.media_type column")
+        with engine.begin() as conn:
+            res = conn.execute(text(
+                f"UPDATE {media_table} SET media_type = 'video' "
+                "WHERE filepath IS NOT NULL AND "
+                "(LOWER(filepath) LIKE '%.mp4' OR LOWER(filepath) LIKE '%.mov' "
+                " OR LOWER(filepath) LIKE '%.avi' OR LOWER(filepath) LIKE '%.webm' "
+                " OR LOWER(filepath) LIKE '%.m4v' OR LOWER(filepath) LIKE '%.mkv')"
+            ))
+            print(f"Backfilled {media_table}.media_type for {res.rowcount} video(s)")
+
     print("Migration complete.")
 
 
