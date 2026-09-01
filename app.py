@@ -8,7 +8,7 @@ import os
 from flask_login import UserMixin, LoginManager, login_user, login_required, logout_user, current_user
 import datetime
 from dotenv import load_dotenv
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -2760,14 +2760,78 @@ def resolve_bank_account(event_id):
 
 
 
-# On startup, ensure the schema exists. db.create_all() only creates
-# missing tables/columns for a fresh database; it never alters existing
-# tables. For an existing database that was created before the
-# is_purchased -> is_successful / is_free rename, run
-# `python migrate_tickets_flags.py` once to migrate it in place.
+# On startup, ensure the schema exists. db.create_all() creates missing
+# tables/columns only for a fresh database; it never alters existing
+# tables. ensure_schema() runs idempotent ALTERs so an existing database
+# (e.g. the production Postgres) gains any new columns added by later
+# model changes (is_successful/is_free, media_type, cancelled_at, ...).
+
+def ensure_schema():
+    """Idempotently bring the database schema in line with the models.
+
+    create_all() does not add columns to tables that already exist, so
+    existing databases need ALTER TABLE ADD COLUMN for every column added
+    since the table was created. Runs safely on both SQLite and Postgres.
+    """
+    engine = db.engine
+    dialect = engine.dialect.name
+
+    def column_names(name):
+        return [c['name'] for c in inspect(engine).get_columns(name)]
+
+    # tickets_users: is_purchased -> is_successful rename + is_free
+    if 'tickets_users' in inspect(engine).get_table_names():
+        cols = column_names('tickets_users')
+        if 'is_purchased' in cols and 'is_successful' not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE tickets_users RENAME COLUMN is_purchased TO is_successful"))
+        if 'is_free' not in cols:
+            with engine.begin() as conn:
+                if dialect == 'sqlite':
+                    conn.execute(text("ALTER TABLE tickets_users ADD COLUMN is_free BOOLEAN DEFAULT 0"))
+                else:
+                    conn.execute(text("ALTER TABLE tickets_users ADD COLUMN is_free BOOLEAN DEFAULT FALSE"))
+        if 'is_successful' in column_names('tickets_users') and 'is_free' in column_names('tickets_users'):
+            with engine.begin() as conn:
+                conn.execute(text(
+                    "UPDATE tickets_users SET is_free = 1 "
+                    "WHERE is_successful = 1 AND ticket_price = 0 AND is_admin_issued = 0"
+                ))
+
+    # event__media: media_type column + video backfill
+    media_table = Event_Media.__tablename__
+    if media_table in inspect(engine).get_table_names():
+        if 'media_type' not in column_names(media_table):
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {media_table} ADD COLUMN media_type VARCHAR(10) DEFAULT 'image'"
+                ))
+        with engine.begin() as conn:
+            conn.execute(text(
+                f"UPDATE {media_table} SET media_type = 'video' "
+                "WHERE filepath IS NOT NULL AND "
+                "(LOWER(filepath) LIKE '%.mp4' OR LOWER(filepath) LIKE '%.mov' "
+                " OR LOWER(filepath) LIKE '%.avi' OR LOWER(filepath) LIKE '%.webm' "
+                " OR LOWER(filepath) LIKE '%.m4v' OR LOWER(filepath) LIKE '%.mkv')"
+            ))
+
+    # events: cancelled_at column + backfill for already-cancelled events
+    events_table = Events.__tablename__
+    if events_table in inspect(engine).get_table_names():
+        if 'cancelled_at' not in column_names(events_table):
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {events_table} ADD COLUMN cancelled_at TIMESTAMP"
+                ))
+        with engine.begin() as conn:
+            conn.execute(text(
+                f"UPDATE {events_table} SET cancelled_at = event_creation_date "
+                "WHERE is_cancelled = 1 AND cancelled_at IS NULL"
+            ))
 
 with app.app_context():
     db.create_all()
+    ensure_schema()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
