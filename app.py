@@ -2775,6 +2775,8 @@ def ensure_schema():
     """
     engine = db.engine
     dialect = engine.dialect.name
+    bool_true = '1' if dialect == 'sqlite' else 'TRUE'
+    bool_false = '0' if dialect == 'sqlite' else 'FALSE'
 
     def column_names(name):
         return [c['name'] for c in inspect(engine).get_columns(name)]
@@ -2794,8 +2796,8 @@ def ensure_schema():
         if 'is_successful' in column_names('tickets_users') and 'is_free' in column_names('tickets_users'):
             with engine.begin() as conn:
                 conn.execute(text(
-                    "UPDATE tickets_users SET is_free = 1 "
-                    "WHERE is_successful = 1 AND ticket_price = 0 AND is_admin_issued = 0"
+                    f"UPDATE tickets_users SET is_free = {bool_true} "
+                    f"WHERE is_successful = {bool_true} AND ticket_price = 0 AND is_admin_issued = {bool_false}"
                 ))
 
     # event__media: media_type column + video backfill
@@ -2826,7 +2828,7 @@ def ensure_schema():
         with engine.begin() as conn:
             conn.execute(text(
                 f"UPDATE {events_table} SET cancelled_at = event_creation_date "
-                "WHERE is_cancelled = 1 AND cancelled_at IS NULL"
+                f"WHERE is_cancelled = {bool_true} AND cancelled_at IS NULL"
             ))
 
 with app.app_context():
